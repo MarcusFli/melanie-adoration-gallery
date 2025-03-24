@@ -5,6 +5,7 @@ import HeartBackground from '../components/HeartBackground';
 import Letter from '../components/Letter';
 import Gallery from '../components/Gallery';
 import ImageLoader from '../components/ImageLoader';
+import { Link } from 'react-router-dom';
 
 const romanticLetter = `Mi amor, mi musa, mi inspiración,
 
@@ -68,6 +69,14 @@ const Index: React.FC = () => {
           
           <div className="lg:w-1/2">
             <Letter letter={romanticLetter} signature={signature} />
+            <div className="mt-6 text-center">
+              <Link 
+                to="/about" 
+                className="inline-block px-6 py-2 bg-melanie-purple/60 hover:bg-melanie-purple text-white rounded-full transition-all duration-300 text-sm"
+              >
+                Conoce más sobre mí
+              </Link>
+            </div>
           </div>
         </div>
       </section>

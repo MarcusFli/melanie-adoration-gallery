@@ -32,6 +32,9 @@ const NavBar: React.FC = () => {
           <Link to="/" className="text-white hover:text-melanie-purple transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-melanie-purple after:left-0 after:bottom-0 after:transition-all hover:after:w-full">
             Inicio
           </Link>
+          <Link to="/about" className="text-white hover:text-melanie-purple transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-melanie-purple after:left-0 after:bottom-0 after:transition-all hover:after:w-full">
+            Sobre Mí
+          </Link>
           <Link to="/gallery" className="text-white hover:text-melanie-purple transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-melanie-purple after:left-0 after:bottom-0 after:transition-all hover:after:w-full">
             Galería
           </Link>

@@ -22,7 +22,26 @@ const imageUrls = [
   "/lovable-uploads/c933c249-c927-447f-8e72-a4c08a0764e9.png",
   "/lovable-uploads/ceb7c044-2aba-4809-a29d-5dc40e115c76.png",
   "/lovable-uploads/3a61898a-222f-4f13-bd6f-7ca84930e572.png",
-  "/lovable-uploads/ef5dc348-7156-42a7-9513-15f29303d3a1.png"
+  "/lovable-uploads/ef5dc348-7156-42a7-9513-15f29303d3a1.png",
+  // New photos
+  "/lovable-uploads/96fa73db-4bf4-4d7e-baed-d727e7e13018.png",
+  "/lovable-uploads/91bcadf4-513b-4b83-9aef-d55bd824d765.png",
+  "/lovable-uploads/99855f72-4756-484a-879e-6ea221a83975.png",
+  "/lovable-uploads/2d3469f5-1eaa-46f6-9089-06c2e78c3240.png",
+  "/lovable-uploads/5abca123-270d-475a-9c62-d4944faba46d.png",
+  "/lovable-uploads/0c471415-8a15-489d-a149-89f1c3aed830.png",
+  "/lovable-uploads/3c664e78-1098-4367-83ad-66727aa98286.png",
+  "/lovable-uploads/c9d390cc-a3bf-41e2-9334-2721998dba97.png",
+  "/lovable-uploads/907988a3-dd91-483c-ae79-7671727ab1de.png",
+  "/lovable-uploads/749d82ca-9fc9-48f8-9bd6-01518ec65f75.png",
+  "/lovable-uploads/8846b9ca-4136-464a-9587-24e9ff1c8a16.png",
+  "/lovable-uploads/7353e455-d844-46b8-aea8-402d36b5e9a6.png",
+  "/lovable-uploads/678e4e75-08eb-4384-9ca9-f93dd15bb2d5.png",
+  "/lovable-uploads/a221b6f0-e57f-40fa-82d0-871114671cee.png",
+  "/lovable-uploads/74983105-e4ac-4565-afdb-74501eb478ea.png",
+  "/lovable-uploads/d22280ff-c479-4e7b-86d7-fe4514b9c6c7.png",
+  "/lovable-uploads/a01acfa6-78f2-4456-8166-d127d076f379.png",
+  "/lovable-uploads/ef541077-558e-40d5-85f7-bfa45752b851.png"
 ];
 
 const GalleryPage: React.FC = () => {
