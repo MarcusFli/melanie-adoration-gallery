@@ -69,7 +69,6 @@ const HeartBackground: React.FC = () => {
             height={heart.size} 
             viewBox="0 0 24 24" 
             className="heart-svg animate-pulse-gentle"
-            fill="currentColor"
           >
             <path
               className="heart-path"
