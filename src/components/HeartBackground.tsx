@@ -9,6 +9,7 @@ interface Heart {
   opacity: number;
   speed: number;
   animationDelay: number;
+  amplitude: number; // New property for controlling movement height
 }
 
 const HeartBackground: React.FC = () => {
@@ -28,7 +29,8 @@ const HeartBackground: React.FC = () => {
           size: Math.random() * 30 + 20, // Tamaño entre 20px y 50px
           opacity: Math.random() * 0.5 + 0.2, // Opacidad entre 0.2 y 0.7
           speed: Math.random() * 40 + 60, // Velocidad de animación entre 60s y 100s
-          animationDelay: Math.random() * -30 // Retraso de animación negativo para iniciar en diferentes puntos
+          animationDelay: Math.random() * -30, // Retraso de animación negativo para iniciar en diferentes puntos
+          amplitude: Math.random() * 20 + 10 // Amplitud del movimiento vertical entre 10px y 30px
         });
       }
       
@@ -57,14 +59,16 @@ const HeartBackground: React.FC = () => {
             top: `${heart.y}%`,
             opacity: heart.opacity,
             animationDuration: `${heart.speed}s`,
-            animationDelay: `${heart.animationDelay}s`
-          }}
+            animationDelay: `${heart.animationDelay}s`,
+            // Apply CSS custom properties for individual heart movement
+            '--heart-amplitude': `${heart.amplitude}px`
+          } as React.CSSProperties}
         >
           <svg 
             width={heart.size} 
             height={heart.size} 
             viewBox="0 0 24 24" 
-            className="heart-svg"
+            className="heart-svg animate-pulse-gentle"
           >
             <path
               className="heart-path"

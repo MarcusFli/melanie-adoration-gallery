@@ -124,14 +124,20 @@ export default {
 					}
 				},
 				'float-heart': {
-					'0%, 100%': {
-						transform: 'translateY(0) rotate(0deg)'
+					'0%': {
+						transform: 'translateY(0) rotate(0deg) scale(1)'
 					},
 					'25%': {
-						transform: 'translateY(-15px) rotate(5deg)'
+						transform: 'translateY(calc(-1 * var(--heart-amplitude, 15px))) rotate(5deg) scale(1.05)'
+					},
+					'50%': {
+						transform: 'translateY(0) rotate(0deg) scale(1)'
 					},
 					'75%': {
-						transform: 'translateY(15px) rotate(-5deg)'
+						transform: 'translateY(var(--heart-amplitude, 15px)) rotate(-5deg) scale(0.95)'
+					},
+					'100%': {
+						transform: 'translateY(0) rotate(0deg) scale(1)'
 					}
 				}
 			},
