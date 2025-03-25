@@ -1,11 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import HeartBackground from '../components/HeartBackground';
+import { usePlaylist } from '../context/PlaylistContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
-import { Music, VideoIcon, Download } from 'lucide-react';
+import { Music, VideoIcon, Download, Playlist } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 // Types for our media files
@@ -30,6 +32,8 @@ const SharedMediaPage: React.FC = () => {
   const [activeAudio, setActiveAudio] = useState<string | null>(null);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { addToPlaylist, isInPlaylist } = usePlaylist();
 
   // Fetch audio files
   const { 
@@ -84,6 +88,20 @@ const SharedMediaPage: React.FC = () => {
     });
   };
 
+  // Add to playlist
+  const handleAddToPlaylist = (file: MediaFile) => {
+    addToPlaylist(file);
+    
+    toast({
+      title: "¡Añadido a la playlist!",
+      description: `${file.name} ha sido añadido a tu playlist.`,
+    });
+  };
+
+  const goToPlaylist = () => {
+    navigate('/playlist');
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <HeartBackground />
@@ -96,6 +114,12 @@ const SharedMediaPage: React.FC = () => {
         <p className="text-xl md:text-2xl text-melanie-purple font-light max-w-2xl mx-auto animate-fade-in opacity-80">
           Explora los audios y videos compartidos por todos los usuarios
         </p>
+        <Button 
+          onClick={goToPlaylist}
+          className="mt-6 bg-melanie-purple hover:bg-melanie-purple/80"
+        >
+          <Playlist className="mr-2 h-4 w-4" /> Ver Mi Playlist
+        </Button>
       </header>
 
       <section className="container mx-auto px-4 py-8">
@@ -134,14 +158,27 @@ const SharedMediaPage: React.FC = () => {
                         className="w-full md:w-auto"
                       />
                       
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleDownload(file.url, file.name)}
-                        className="border-melanie-purple/50 text-white"
-                      >
-                        <Download className="h-4 w-4 mr-2" /> Descargar
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleAddToPlaylist(file)}
+                          className="border-melanie-purple/50 text-white"
+                          disabled={isInPlaylist(file.id)}
+                        >
+                          <Playlist className="mr-1 h-4 w-4" />
+                          {isInPlaylist(file.id) ? 'En Playlist' : 'Añadir a Playlist'}
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleDownload(file.url, file.name)}
+                          className="border-melanie-purple/50 text-white"
+                        >
+                          <Download className="h-4 w-4 mr-2" /> Descargar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}

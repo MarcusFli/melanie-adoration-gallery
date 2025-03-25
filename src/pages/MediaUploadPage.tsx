@@ -1,13 +1,13 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import HeartBackground from '../components/HeartBackground';
+import { usePlaylist } from '../context/PlaylistContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Music, VideoIcon, Upload, Share, Loader2 } from 'lucide-react';
+import { Music, VideoIcon, Upload, Share, Loader2, Playlist } from 'lucide-react';
 
 interface UploadResponse {
   id: string;
@@ -28,6 +28,7 @@ const MediaUploadPage: React.FC = () => {
   const videoRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { addToPlaylist, isInPlaylist } = usePlaylist();
 
   const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -35,7 +36,6 @@ const MediaUploadPage: React.FC = () => {
       const fileArray = Array.from(files);
       setAudioFiles(prev => [...prev, ...fileArray]);
       
-      // Create URLs for the audio files
       const newUrls = fileArray.map(file => URL.createObjectURL(file));
       setAudioUrls(prev => [...prev, ...newUrls]);
       
@@ -52,7 +52,6 @@ const MediaUploadPage: React.FC = () => {
       const fileArray = Array.from(files);
       setVideoFiles(prev => [...prev, ...fileArray]);
       
-      // Create URLs for the video files
       const newUrls = fileArray.map(file => URL.createObjectURL(file));
       setVideoUrls(prev => [...prev, ...newUrls]);
       
@@ -64,28 +63,18 @@ const MediaUploadPage: React.FC = () => {
   };
 
   const handleAudioDelete = (index: number) => {
-    // Revoke the URL to prevent memory leaks
     URL.revokeObjectURL(audioUrls[index]);
-    
-    // Remove the file and URL from their respective arrays
     setAudioFiles(prev => prev.filter((_, i) => i !== index));
     setAudioUrls(prev => prev.filter((_, i) => i !== index));
-    
-    // If the active audio is deleted, set activeAudio to null
     if (audioUrls[index] === activeAudio) {
       setActiveAudio(null);
     }
   };
 
   const handleVideoDelete = (index: number) => {
-    // Revoke the URL to prevent memory leaks
     URL.revokeObjectURL(videoUrls[index]);
-    
-    // Remove the file and URL from their respective arrays
     setVideoFiles(prev => prev.filter((_, i) => i !== index));
     setVideoUrls(prev => prev.filter((_, i) => i !== index));
-    
-    // If the active video is deleted, set activeVideo to null
     if (videoUrls[index] === activeVideo) {
       setActiveVideo(null);
     }
@@ -130,7 +119,6 @@ const MediaUploadPage: React.FC = () => {
         description: `${audioFiles.length} archivo(s) de audio compartido(s) correctamente.`,
       });
       
-      // Clear the local files after successful upload
       audioFiles.forEach((_, index) => {
         URL.revokeObjectURL(audioUrls[index]);
       });
@@ -139,7 +127,6 @@ const MediaUploadPage: React.FC = () => {
       setAudioUrls([]);
       setActiveAudio(null);
       
-      // Navigate to shared media page
       navigate('/shared-media');
     } catch (error) {
       console.error("Error sharing audio files:", error);
@@ -175,7 +162,6 @@ const MediaUploadPage: React.FC = () => {
         description: `${videoFiles.length} archivo(s) de video compartido(s) correctamente.`,
       });
       
-      // Clear the local files after successful upload
       videoFiles.forEach((_, index) => {
         URL.revokeObjectURL(videoUrls[index]);
       });
@@ -184,7 +170,6 @@ const MediaUploadPage: React.FC = () => {
       setVideoUrls([]);
       setActiveVideo(null);
       
-      // Navigate to shared media page
       navigate('/shared-media');
     } catch (error) {
       console.error("Error sharing video files:", error);
@@ -202,6 +187,33 @@ const MediaUploadPage: React.FC = () => {
     navigate('/shared-media');
   };
 
+  const goToPlaylist = () => {
+    navigate('/playlist');
+  };
+
+  const addAudioToPlaylist = (file: File, url: string, index: number) => {
+    const fileId = `local-${file.name}-${file.lastModified}`;
+    
+    const mediaFile = {
+      id: fileId,
+      name: file.name,
+      url: url,
+      type: 'audio' as const
+    };
+    
+    addToPlaylist(mediaFile);
+    
+    toast({
+      title: "¡Añadido a la playlist!",
+      description: `${file.name} ha sido añadido a tu playlist.`,
+    });
+  };
+
+  const isAudioInPlaylist = (file: File) => {
+    const fileId = `local-${file.name}-${file.lastModified}`;
+    return isInPlaylist(fileId);
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <HeartBackground />
@@ -214,12 +226,21 @@ const MediaUploadPage: React.FC = () => {
         <p className="text-xl md:text-2xl text-melanie-purple font-light max-w-2xl mx-auto animate-fade-in opacity-80">
           Sube y comparte tus audios y videos favoritos
         </p>
-        <Button 
-          onClick={goToSharedMedia}
-          className="mt-6 bg-melanie-purple hover:bg-melanie-purple/80"
-        >
-          Ver Medios Compartidos
-        </Button>
+        <div className="flex flex-wrap gap-4 justify-center mt-6">
+          <Button 
+            onClick={goToSharedMedia}
+            className="bg-melanie-purple hover:bg-melanie-purple/80"
+          >
+            Ver Medios Compartidos
+          </Button>
+          <Button 
+            onClick={goToPlaylist}
+            variant="outline"
+            className="border-melanie-purple/50 text-white"
+          >
+            <Playlist className="mr-2 h-4 w-4" /> Mi Playlist
+          </Button>
+        </div>
       </header>
 
       <section className="container mx-auto px-4 py-8">
@@ -297,13 +318,26 @@ const MediaUploadPage: React.FC = () => {
                         className="w-full md:w-auto"
                       />
                       
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        onClick={() => handleAudioDelete(index)}
-                      >
-                        Eliminar
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline"
+                          size="sm" 
+                          onClick={() => addAudioToPlaylist(audioFiles[index], url, index)}
+                          className="border-melanie-purple/50 text-white"
+                          disabled={isAudioInPlaylist(audioFiles[index])}
+                        >
+                          <Playlist className="mr-1 h-4 w-4" /> 
+                          {isAudioInPlaylist(audioFiles[index]) ? 'En Playlist' : 'Añadir a Playlist'}
+                        </Button>
+                        
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => handleAudioDelete(index)}
+                        >
+                          Eliminar
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
