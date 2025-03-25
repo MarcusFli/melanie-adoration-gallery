@@ -15,7 +15,7 @@ import {
   SkipBack, 
   Volume2, 
   VolumeX, 
-  Playlist as PlaylistIcon 
+  ListMusic 
 } from 'lucide-react';
 
 const PlaylistPage: React.FC = () => {
@@ -234,7 +234,7 @@ const PlaylistPage: React.FC = () => {
         <div className="bg-black/30 backdrop-blur-md p-6 rounded-xl border border-melanie-purple/20">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <PlaylistIcon className="h-5 w-5 text-melanie-purple" />
+              <ListMusic className="h-5 w-5 text-melanie-purple" />
               <h2 className="text-2xl font-allura text-white">Mi Playlist ({playlist.length}/10)</h2>
             </div>
             

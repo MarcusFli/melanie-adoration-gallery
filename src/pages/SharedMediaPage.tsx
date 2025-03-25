@@ -7,7 +7,7 @@ import { usePlaylist } from '../context/PlaylistContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/components/ui/use-toast";
-import { Music, VideoIcon, Download, Playlist } from 'lucide-react';
+import { Music, VideoIcon, Download, ListMusic } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 // Types for our media files
@@ -118,7 +118,7 @@ const SharedMediaPage: React.FC = () => {
           onClick={goToPlaylist}
           className="mt-6 bg-melanie-purple hover:bg-melanie-purple/80"
         >
-          <Playlist className="mr-2 h-4 w-4" /> Ver Mi Playlist
+          <ListMusic className="mr-2 h-4 w-4" /> Ver Mi Playlist
         </Button>
       </header>
 
@@ -166,7 +166,7 @@ const SharedMediaPage: React.FC = () => {
                           className="border-melanie-purple/50 text-white"
                           disabled={isInPlaylist(file.id)}
                         >
-                          <Playlist className="mr-1 h-4 w-4" />
+                          <ListMusic className="mr-1 h-4 w-4" />
                           {isInPlaylist(file.id) ? 'En Playlist' : 'Añadir a Playlist'}
                         </Button>
                         

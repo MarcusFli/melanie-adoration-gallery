@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Music, VideoIcon, Upload, Share, Loader2, Playlist } from 'lucide-react';
+import { Music, VideoIcon, Upload, Share, Loader2, ListMusic } from 'lucide-react';
 
 interface UploadResponse {
   id: string;
@@ -238,7 +238,7 @@ const MediaUploadPage: React.FC = () => {
             variant="outline"
             className="border-melanie-purple/50 text-white"
           >
-            <Playlist className="mr-2 h-4 w-4" /> Mi Playlist
+            <ListMusic className="mr-2 h-4 w-4" /> Mi Playlist
           </Button>
         </div>
       </header>
@@ -326,7 +326,7 @@ const MediaUploadPage: React.FC = () => {
                           className="border-melanie-purple/50 text-white"
                           disabled={isAudioInPlaylist(audioFiles[index])}
                         >
-                          <Playlist className="mr-1 h-4 w-4" /> 
+                          <ListMusic className="mr-1 h-4 w-4" /> 
                           {isAudioInPlaylist(audioFiles[index]) ? 'En Playlist' : 'Añadir a Playlist'}
                         </Button>
                         
