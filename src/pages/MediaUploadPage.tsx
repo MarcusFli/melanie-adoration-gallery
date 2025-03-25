@@ -1,12 +1,19 @@
 
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import HeartBackground from '../components/HeartBackground';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Music, VideoIcon, Upload } from 'lucide-react';
+import { Music, VideoIcon, Upload, Share, Loader2 } from 'lucide-react';
+
+interface UploadResponse {
+  id: string;
+  url: string;
+  name: string;
+}
 
 const MediaUploadPage: React.FC = () => {
   const [audioFiles, setAudioFiles] = useState<File[]>([]);
@@ -15,9 +22,12 @@ const MediaUploadPage: React.FC = () => {
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [activeAudio, setActiveAudio] = useState<string | null>(null);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [uploadingAudio, setUploadingAudio] = useState<boolean>(false);
+  const [uploadingVideo, setUploadingVideo] = useState<boolean>(false);
   const audioRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -81,6 +91,117 @@ const MediaUploadPage: React.FC = () => {
     }
   };
 
+  const uploadToStorage = async (file: File, type: 'audio' | 'video'): Promise<UploadResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', type);
+    
+    const response = await fetch('https://lovable-supabase-functions.vercel.app/api/upload-media', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error uploading ${type} file`);
+    }
+    
+    return response.json();
+  };
+
+  const handleShareAudio = async () => {
+    if (audioFiles.length === 0) {
+      toast({
+        title: "Error",
+        description: "No hay archivos de audio para compartir",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setUploadingAudio(true);
+    
+    try {
+      for (const file of audioFiles) {
+        await uploadToStorage(file, 'audio');
+      }
+      
+      toast({
+        title: "¡Éxito!",
+        description: `${audioFiles.length} archivo(s) de audio compartido(s) correctamente.`,
+      });
+      
+      // Clear the local files after successful upload
+      audioFiles.forEach((_, index) => {
+        URL.revokeObjectURL(audioUrls[index]);
+      });
+      
+      setAudioFiles([]);
+      setAudioUrls([]);
+      setActiveAudio(null);
+      
+      // Navigate to shared media page
+      navigate('/shared-media');
+    } catch (error) {
+      console.error("Error sharing audio files:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron compartir los archivos de audio",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAudio(false);
+    }
+  };
+
+  const handleShareVideo = async () => {
+    if (videoFiles.length === 0) {
+      toast({
+        title: "Error",
+        description: "No hay archivos de video para compartir",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setUploadingVideo(true);
+    
+    try {
+      for (const file of videoFiles) {
+        await uploadToStorage(file, 'video');
+      }
+      
+      toast({
+        title: "¡Éxito!",
+        description: `${videoFiles.length} archivo(s) de video compartido(s) correctamente.`,
+      });
+      
+      // Clear the local files after successful upload
+      videoFiles.forEach((_, index) => {
+        URL.revokeObjectURL(videoUrls[index]);
+      });
+      
+      setVideoFiles([]);
+      setVideoUrls([]);
+      setActiveVideo(null);
+      
+      // Navigate to shared media page
+      navigate('/shared-media');
+    } catch (error) {
+      console.error("Error sharing video files:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron compartir los archivos de video",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const goToSharedMedia = () => {
+    navigate('/shared-media');
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <HeartBackground />
@@ -91,8 +212,14 @@ const MediaUploadPage: React.FC = () => {
           Tus Medios
         </h1>
         <p className="text-xl md:text-2xl text-melanie-purple font-light max-w-2xl mx-auto animate-fade-in opacity-80">
-          Sube y guarda tus audios y videos favoritos
+          Sube y comparte tus audios y videos favoritos
         </p>
+        <Button 
+          onClick={goToSharedMedia}
+          className="mt-6 bg-melanie-purple hover:bg-melanie-purple/80"
+        >
+          Ver Medios Compartidos
+        </Button>
       </header>
 
       <section className="container mx-auto px-4 py-8">
@@ -128,6 +255,26 @@ const MediaUploadPage: React.FC = () => {
                   Formatos soportados: MP3, WAV, OGG, etc.
                 </p>
               </div>
+              
+              {audioFiles.length > 0 && (
+                <div className="mt-4">
+                  <Button 
+                    onClick={handleShareAudio}
+                    className="w-full md:w-auto bg-green-600 hover:bg-green-700"
+                    disabled={uploadingAudio}
+                  >
+                    {uploadingAudio ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Compartiendo...
+                      </>
+                    ) : (
+                      <>
+                        <Share className="mr-2 h-4 w-4" /> Compartir {audioFiles.length} Archivo(s)
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
             
             {audioUrls.length > 0 ? (
@@ -190,6 +337,26 @@ const MediaUploadPage: React.FC = () => {
                   Formatos soportados: MP4, WebM, MOV, etc.
                 </p>
               </div>
+              
+              {videoFiles.length > 0 && (
+                <div className="mt-4">
+                  <Button 
+                    onClick={handleShareVideo}
+                    className="w-full md:w-auto bg-green-600 hover:bg-green-700"
+                    disabled={uploadingVideo}
+                  >
+                    {uploadingVideo ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Compartiendo...
+                      </>
+                    ) : (
+                      <>
+                        <Share className="mr-2 h-4 w-4" /> Compartir {videoFiles.length} Archivo(s)
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
             
             {videoUrls.length > 0 ? (

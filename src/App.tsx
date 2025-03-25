@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import GalleryPage from "./pages/GalleryPage";
 import AboutMePage from "./pages/AboutMePage";
 import MediaUploadPage from "./pages/MediaUploadPage";
+import SharedMediaPage from "./pages/SharedMediaPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/about" element={<AboutMePage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/media" element={<MediaUploadPage />} />
+          <Route path="/shared-media" element={<SharedMediaPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
