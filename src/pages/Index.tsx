@@ -1,4 +1,3 @@
-
 import React from 'react';
 import NavBar from '../components/NavBar';
 import HeartBackground from '../components/HeartBackground';
@@ -6,6 +5,8 @@ import Letter from '../components/Letter';
 import Gallery from '../components/Gallery';
 import ImageLoader from '../components/ImageLoader';
 import { Link } from 'react-router-dom';
+import EasterEgg from '../components/EasterEgg';
+import EasterEggHuntStatus from '../components/EasterEggHuntStatus';
 
 const romanticLetter = `Mi amor, mi musa, mi inspiración,
 
@@ -45,6 +46,7 @@ const Index: React.FC = () => {
     <div className="min-h-screen pb-20">
       <HeartBackground />
       <NavBar />
+      <EasterEggHuntStatus />
       
       <header className="pt-32 pb-16 px-4 sm:px-6 text-center">
         <h1 className="text-5xl md:text-7xl font-allura mb-6 text-white animate-fade-in">
@@ -56,7 +58,10 @@ const Index: React.FC = () => {
       </header>
 
       <section className="py-16 mx-auto container px-4">
-        <div className="flex flex-col lg:flex-row gap-12 items-center">
+        <div className="flex flex-col lg:flex-row gap-12 items-center relative">
+          <EasterEgg id="egg1" className="top-0 right-0" />
+          <EasterEgg id="egg2" className="bottom-0 left-1/4" />
+          
           <div className="lg:w-1/2 flex justify-center">
             <div className="w-full max-w-md rounded-xl overflow-hidden shadow-2xl animate-float">
               <ImageLoader 
@@ -81,7 +86,11 @@ const Index: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-16 container mx-auto">
+      <section className="py-16 container mx-auto relative">
+        <EasterEgg id="egg3" className="top-1/4 right-10" />
+        <EasterEgg id="egg4" className="bottom-1/4 left-10" />
+        <EasterEgg id="egg5" className="top-1/2 left-1/2 transform -translate-x-1/2" />
+        
         <h2 className="text-4xl md:text-5xl font-allura mb-16 text-center text-white">
           Un vistazo a tu belleza
         </h2>
