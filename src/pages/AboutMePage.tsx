@@ -1,4 +1,3 @@
-
 import React from 'react';
 import NavBar from '../components/NavBar';
 import HeartBackground from '../components/HeartBackground';
@@ -6,6 +5,8 @@ import ImageLoader from '../components/ImageLoader';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import Letter from '../components/Letter';
+import EasterEgg from '../components/EasterEgg';
+import EasterEggHuntStatus from '../components/EasterEggHuntStatus';
 
 const romanticLetter = `Mi amor, mi musa, mi inspiración,
 
@@ -39,8 +40,10 @@ const AboutMePage: React.FC = () => {
     <div className="min-h-screen pb-20">
       <HeartBackground />
       <NavBar />
+      <EasterEggHuntStatus />
       
-      <header className="pt-32 pb-16 px-4 sm:px-6 text-center">
+      <header className="pt-32 pb-16 px-4 sm:px-6 text-center relative">
+        <EasterEgg id="egg8" className="top-40 left-10" pattern={2} />
         <h1 className="text-5xl md:text-7xl font-allura mb-6 text-white animate-fade-in">
           Sobre Melanie
         </h1>
@@ -49,12 +52,17 @@ const AboutMePage: React.FC = () => {
         </p>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative">
+        <EasterEgg id="egg9" className="top-10 right-10" pattern={3} />
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Left column - Profile Info */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 relative">
+            <EasterEgg id="egg10" className="bottom-40 left-10" pattern={4} />
+            
             <div className="flex flex-col items-center space-y-8">
-              <div className="w-48 h-48 rounded-full overflow-hidden ring-4 ring-melanie-purple/50 shadow-xl">
+              <div className="w-48 h-48 rounded-full overflow-hidden ring-4 ring-melanie-purple/50 shadow-xl relative">
+                <EasterEgg id="egg11" className="top-0 right-0" pattern={0} />
                 <ImageLoader 
                   src="/lovable-uploads/96fa73db-4bf4-4d7e-baed-d727e7e13018.png" 
                   alt="Melanie" 
@@ -87,13 +95,17 @@ const AboutMePage: React.FC = () => {
           </div>
 
           {/* Right column - Letter & Gallery */}
-          <div className="lg:col-span-2 space-y-10">
+          <div className="lg:col-span-2 space-y-10 relative">
             <section>
               <h2 className="text-3xl font-allura text-white mb-6">Mi Carta de Amor</h2>
-              <Letter letter={romanticLetter} signature={signature} />
+              <div className="relative">
+                <EasterEgg id="egg12" className="top-0 right-10" pattern={1} />
+                <Letter letter={romanticLetter} signature={signature} />
+              </div>
             </section>
             
-            <section>
+            <section className="relative">
+              <EasterEgg id="egg13" className="top-0 left-1/2" pattern={2} />
               <h2 className="text-3xl font-allura text-white mb-6">Momentos Especiales</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="card-hover rounded-xl overflow-hidden">
@@ -103,7 +115,8 @@ const AboutMePage: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="card-hover rounded-xl overflow-hidden">
+                <div className="card-hover rounded-xl overflow-hidden relative">
+                  <EasterEgg id="egg14" className="top-0 right-0" pattern={3} />
                   <ImageLoader 
                     src="/lovable-uploads/0c471415-8a15-489d-a149-89f1c3aed830.png" 
                     alt="Melanie" 
@@ -117,7 +130,8 @@ const AboutMePage: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="card-hover rounded-xl overflow-hidden">
+                <div className="card-hover rounded-xl overflow-hidden relative">
+                  <EasterEgg id="egg15" className="bottom-0 right-0" pattern={4} />
                   <ImageLoader 
                     src="/lovable-uploads/c9d390cc-a3bf-41e2-9334-2721998dba97.png" 
                     alt="Melanie" 

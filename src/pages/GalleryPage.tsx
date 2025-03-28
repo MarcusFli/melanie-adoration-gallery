@@ -2,6 +2,8 @@ import React from 'react';
 import NavBar from '../components/NavBar';
 import HeartBackground from '../components/HeartBackground';
 import Gallery from '../components/Gallery';
+import EasterEgg from '../components/EasterEgg';
+import EasterEggHuntStatus from '../components/EasterEggHuntStatus';
 
 const imageUrls = [
   "/lovable-uploads/b94290fa-5e3d-42eb-9b0d-f040b603405d.png",
@@ -62,8 +64,10 @@ const GalleryPage: React.FC = () => {
     <div className="min-h-screen pb-20">
       <HeartBackground />
       <NavBar />
+      <EasterEggHuntStatus />
       
-      <header className="pt-32 pb-16 px-4 sm:px-6 text-center">
+      <header className="pt-32 pb-16 px-4 sm:px-6 text-center relative">
+        <EasterEgg id="egg16" className="top-40 right-10" pattern={0} />
         <h1 className="text-5xl md:text-7xl font-allura mb-6 text-white animate-fade-in">
           Galería de Melanie
         </h1>
@@ -72,7 +76,12 @@ const GalleryPage: React.FC = () => {
         </p>
       </header>
 
-      <section className="py-8 container mx-auto">
+      <section className="py-8 container mx-auto relative">
+        <EasterEgg id="egg17" className="top-1/4 left-10" pattern={1} />
+        <EasterEgg id="egg18" className="top-1/3 right-10" pattern={2} />
+        <EasterEgg id="egg19" className="bottom-1/4 left-1/4" pattern={3} />
+        <EasterEgg id="egg20" className="bottom-10 right-1/4" pattern={4} />
+        
         <Gallery images={imageUrls} columnLayout={3} />
       </section>
     </div>

@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { toast } from "@/components/ui/use-toast";
 
 interface EasterEggContextType {
   collectedEggs: string[];
@@ -14,8 +15,8 @@ interface EasterEggContextType {
 
 const EasterEggContext = createContext<EasterEggContextType | undefined>(undefined);
 
-export const TOTAL_EGGS = 5;
-const HUNT_TIME = 300; // 5 minutes in seconds
+export const TOTAL_EGGS = 20; // Updated to 20 eggs
+const HUNT_TIME = 600; // 10 minutes in seconds (increased time for more eggs)
 
 export function EasterEggProvider({ children }: { children: React.ReactNode }) {
   const [collectedEggs, setCollectedEggs] = useState<string[]>([]);
@@ -35,15 +36,33 @@ export function EasterEggProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (timeRemaining === 0) {
+      toast({
+        title: "¡Tiempo agotado!",
+        description: `Has encontrado ${collectedEggs.length} de ${TOTAL_EGGS} huevos.`,
+        variant: "destructive"
+      });
       resetHunt();
     }
-  }, [timeRemaining]);
+  }, [timeRemaining, collectedEggs.length]);
 
   useEffect(() => {
     if (collectedEggs.length === TOTAL_EGGS) {
+      toast({
+        title: "¡Felicidades!",
+        description: "Has encontrado todos los huevos. ¡La galería secreta ha sido desbloqueada!",
+        variant: "default",
+        className: "bg-green-500 text-white"
+      });
       setHasCompletedHunt(true);
       setIsHuntActive(false);
       setTimeRemaining(null);
+    } else if (collectedEggs.length > 0 && isHuntActive) {
+      toast({
+        title: "¡Huevo encontrado!",
+        description: `${collectedEggs.length} de ${TOTAL_EGGS} huevos encontrados.`,
+        variant: "default",
+        className: "bg-melanie-purple text-white"
+      });
     }
   }, [collectedEggs]);
 
@@ -52,6 +71,12 @@ export function EasterEggProvider({ children }: { children: React.ReactNode }) {
     setTimeRemaining(HUNT_TIME);
     setIsHuntActive(true);
     setHasCompletedHunt(false);
+    toast({
+      title: "¡Búsqueda de huevos iniciada!",
+      description: `Encuentra ${TOTAL_EGGS} huevos en ${Math.floor(HUNT_TIME / 60)} minutos.`,
+      variant: "default",
+      className: "bg-melanie-purple text-white"
+    });
   };
 
   const resetHunt = () => {
