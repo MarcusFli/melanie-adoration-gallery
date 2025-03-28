@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useEasterEggs } from '../context/EasterEggContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,19 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Award, LockOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Use more interesting unsplash photos for the secret gallery
+// New secret images
 const secretImages = [
-  "photo-1618160702438-9b02ab6515c9",
-  "photo-1582562124811-c09040d0a901",
-  "photo-1472396961693-142e6e269027",
-  "photo-1535268647677-300dbf3d78d1",
-  "photo-1501286353178-1ec881214838",
-  "photo-1593642634443-44adaa06623a",
-  "photo-1519052537078-e6302a4968d4",
-  "photo-1514888286974-6c03e2ca1dba",
-  "photo-1573865526739-10659fec78a5",
-  "photo-1548366086-7f1b76106622"
-].map(id => `https://images.unsplash.com/${id}`);
+  "/lovable-uploads/2336d6a5-8410-4bf4-bcc0-9de6b2336f2a.png",
+  "/lovable-uploads/d62258f4-17a4-4667-9500-59610cf94715.png",
+  "/lovable-uploads/ed96c2b9-6153-4b4a-8cb6-2c47ba6595e5.png",
+  "/lovable-uploads/5b101f07-89d8-4948-bbd5-4e1e21c5b2f8.png",
+  // Keep a few of the unsplash photos as additional gallery items
+  "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+  "https://images.unsplash.com/photo-1501286353178-1ec881214838",
+  "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1",
+  "https://images.unsplash.com/photo-1519052537078-e6302a4968d4"
+];
 
 const SecretGallery: React.FC = () => {
   const { hasCompletedHunt } = useEasterEggs();

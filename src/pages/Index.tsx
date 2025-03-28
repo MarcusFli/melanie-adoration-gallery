@@ -51,6 +51,7 @@ const Index: React.FC = () => {
       
       <header className="pt-32 pb-16 px-4 sm:px-6 text-center relative">
         <EasterEgg id="egg1" className="top-40 right-10 md:right-1/4" pattern={0} />
+        <EasterEgg id="egg2" className="top-36 left-10 md:left-1/4" pattern={1} />
         
         <h1 className="text-5xl md:text-7xl font-allura mb-6 text-white animate-fade-in">
           Melanie Veizaga
@@ -62,10 +63,11 @@ const Index: React.FC = () => {
 
       <section className="py-16 mx-auto container px-4 relative">
         <div className="flex flex-col lg:flex-row gap-12 items-center">
-          <EasterEgg id="egg2" className="bottom-20 right-10 md:right-1/3" pattern={1} />
+          <EasterEgg id="egg3" className="bottom-20 right-10 md:right-1/3" pattern={2} />
+          <EasterEgg id="egg4" className="bottom-40 left-10 md:left-1/3" pattern={3} />
           
           <div className="lg:w-1/2 flex justify-center relative">
-            <EasterEgg id="egg3" className="top-10 left-10" pattern={2} />
+            <EasterEgg id="egg5" className="top-10 left-10" pattern={4} />
             <div className="w-full max-w-md rounded-xl overflow-hidden shadow-2xl animate-float">
               <ImageLoader 
                 src={imageUrls[0]} 
@@ -76,7 +78,8 @@ const Index: React.FC = () => {
           </div>
           
           <div className="lg:w-1/2 relative">
-            <EasterEgg id="egg4" className="top-0 right-0" pattern={3} />
+            <EasterEgg id="egg6" className="top-0 right-0" pattern={0} />
+            <EasterEgg id="egg7" className="bottom-20 left-10" pattern={1} />
             <Letter letter={romanticLetter} signature={signature} />
             <div className="mt-6 text-center">
               <Link 
@@ -91,8 +94,9 @@ const Index: React.FC = () => {
       </section>
 
       <section className="py-16 container mx-auto relative">
-        <EasterEgg id="egg5" className="top-1/4 right-10" pattern={4} />
-        <EasterEgg id="egg6" className="bottom-1/4 left-10" pattern={0} />
+        <EasterEgg id="egg8" className="top-1/4 right-10" pattern={2} />
+        <EasterEgg id="egg9" className="bottom-1/4 left-10" pattern={3} />
+        <EasterEgg id="egg10" className="top-3/4 right-1/4" pattern={4} />
         
         <h2 className="text-4xl md:text-5xl font-allura mb-16 text-center text-white">
           Un vistazo a tu belleza
@@ -101,7 +105,8 @@ const Index: React.FC = () => {
         <Gallery images={imageUrls.slice(0, 6)} />
         
         <div className="mt-10 text-center relative">
-          <EasterEgg id="egg7" className="top-0 left-1/4" pattern={1} />
+          <EasterEgg id="egg11" className="top-0 left-1/4" pattern={0} />
+          <EasterEgg id="egg12" className="top-0 right-1/4" pattern={1} />
           <a 
             href="/gallery" 
             className="inline-block px-8 py-3 bg-melanie-purple/80 hover:bg-melanie-purple text-white rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-melanie-purple/30"

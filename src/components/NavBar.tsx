@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Music } from 'lucide-react';
+import { useEasterEggs } from '../context/EasterEggContext';
 
 const NavBar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
+  const { hasCompletedHunt } = useEasterEggs();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,6 +44,11 @@ const NavBar: React.FC = () => {
           <Link to="/media" className="text-white hover:text-melanie-purple transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-melanie-purple after:left-0 after:bottom-0 after:transition-all hover:after:w-full flex items-center">
             <Music className="mr-1 h-4 w-4" /> Medios
           </Link>
+          {hasCompletedHunt && (
+            <Link to="/secret-gallery" className="text-green-400 hover:text-green-300 transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-green-400 after:left-0 after:bottom-0 after:transition-all hover:after:w-full flex items-center">
+              Galería Secreta
+            </Link>
+          )}
         </div>
       </div>
     </nav>
