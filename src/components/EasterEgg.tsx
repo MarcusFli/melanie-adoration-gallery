@@ -34,11 +34,13 @@ const EasterEgg: React.FC<EasterEggProps> = ({ id, className, pattern = 0 }) => 
     <div 
       className={cn(
         "absolute cursor-pointer transition-all duration-300 z-50",
-        isCollected ? "opacity-50 pointer-events-none" : "opacity-100 hover:scale-125",
-        isHovering && !isCollected ? "animate-bounce" : "",
+        isCollected ? "opacity-50 pointer-events-none" : "opacity-100 hover:scale-110",
         className
       )}
-      onClick={() => collectEgg(id)}
+      onClick={(e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        collectEgg(id);
+      }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       style={{ 
@@ -47,7 +49,7 @@ const EasterEgg: React.FC<EasterEggProps> = ({ id, className, pattern = 0 }) => 
     >
       <div 
         className={cn(
-          "w-12 h-16 bg-contain bg-no-repeat bg-center",
+          "w-6 h-8 bg-contain bg-no-repeat bg-center", // Changed from w-12 h-16 to w-6 h-8 (half size)
           isCollected ? "opacity-60" : "opacity-100"
         )} 
         style={{
