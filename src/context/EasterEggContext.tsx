@@ -71,6 +71,10 @@ export function EasterEggProvider({ children }: { children: React.ReactNode }) {
     setTimeRemaining(HUNT_TIME);
     setIsHuntActive(true);
     setHasCompletedHunt(false);
+    
+    // Added log to confirm hunt is active
+    console.log("Hunt started! isHuntActive:", true);
+    
     toast({
       title: "¡Búsqueda de huevos iniciada!",
       description: `Encuentra ${TOTAL_EGGS} huevos en ${Math.floor(HUNT_TIME / 60)} minutos.`,
@@ -83,13 +87,17 @@ export function EasterEggProvider({ children }: { children: React.ReactNode }) {
     setCollectedEggs([]);
     setTimeRemaining(null);
     setIsHuntActive(false);
+    console.log("Hunt reset! isHuntActive:", false);
   };
 
   const collectEgg = (eggId: string) => {
     if (!collectedEggs.includes(eggId) && isHuntActive) {
+      console.log("Egg collected:", eggId);
       setCollectedEggs((prev) => [...prev, eggId]);
     }
   };
+
+  console.log("Context state:", { isHuntActive, collectedEggs, timeRemaining });
 
   return (
     <EasterEggContext.Provider

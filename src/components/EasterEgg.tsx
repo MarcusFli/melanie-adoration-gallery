@@ -13,6 +13,7 @@ const EasterEgg: React.FC<EasterEggProps> = ({ id, className, pattern = 0 }) => 
   const { collectEgg, collectedEggs, isHuntActive } = useEasterEggs();
   const [isHovering, setIsHovering] = useState(false);
 
+  // Return null only if hunt is not active
   if (!isHuntActive) return null;
 
   const isCollected = collectedEggs.includes(id);
@@ -24,7 +25,7 @@ const EasterEgg: React.FC<EasterEggProps> = ({ id, className, pattern = 0 }) => 
     <div 
       className={cn(
         "absolute cursor-pointer transition-all duration-300 z-50",
-        isCollected ? "opacity-50 pointer-events-none" : "hover:scale-125",
+        isCollected ? "opacity-50 pointer-events-none" : "opacity-100 hover:scale-125",
         isHovering && !isCollected ? "animate-bounce" : "",
         className
       )}
