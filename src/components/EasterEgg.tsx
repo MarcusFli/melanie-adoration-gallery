@@ -19,7 +19,16 @@ const EasterEgg: React.FC<EasterEggProps> = ({ id, className, pattern = 0 }) => 
   const isCollected = collectedEggs.includes(id);
   
   // Use the pattern parameter to determine which Easter egg image to display
-  const patternIndex = pattern % 5; // 5 patterns in our image
+  const eggImages = [
+    "/lovable-uploads/86725216-6cf5-4a29-9ae8-7cacbd2fe856.png", // Striped colorful egg
+    "/lovable-uploads/49df229f-042a-4565-9faa-756a2079a202.png", // Leaf pattern egg
+    "/lovable-uploads/9d2148e1-f049-41f0-a1b6-55f8c108dc5e.png", // Flower pattern egg (orange/pink)
+    "/lovable-uploads/ce7b8437-8251-4e94-9175-a0004a70f4c7.png", // Blue flower pattern egg
+    "/lovable-uploads/24684d37-fca4-4116-ab45-376044d9cbd3.png"  // Striped/dotted pattern egg
+  ];
+  
+  const patternIndex = pattern % eggImages.length;
+  const eggImage = eggImages[patternIndex];
   
   return (
     <div 
@@ -38,16 +47,11 @@ const EasterEgg: React.FC<EasterEggProps> = ({ id, className, pattern = 0 }) => 
     >
       <div 
         className={cn(
-          "w-10 h-12 bg-contain bg-no-repeat bg-center",
+          "w-12 h-16 bg-contain bg-no-repeat bg-center",
           isCollected ? "opacity-60" : "opacity-100"
         )} 
         style={{
-          backgroundImage: `url('/lovable-uploads/fef539b8-780c-4b49-86d8-f8c748205325.png')`,
-          backgroundPosition: patternIndex === 0 ? 'top left' : 
-                              patternIndex === 1 ? 'top right' : 
-                              patternIndex === 2 ? 'center left' : 
-                              patternIndex === 3 ? 'center right' : 'bottom center',
-          backgroundSize: '500%', // Divide the image to show just one egg
+          backgroundImage: `url('${eggImage}')`,
           filter: isCollected ? 'grayscale(1)' : 'none'
         }}
       />
