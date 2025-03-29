@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Music } from 'lucide-react';
+import { Music, Gamepad } from 'lucide-react';
 import { useEasterEggs } from '../context/EasterEggContext';
 
 const NavBar: React.FC = () => {
@@ -43,6 +43,9 @@ const NavBar: React.FC = () => {
           </Link>
           <Link to="/media" className="text-white hover:text-melanie-purple transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-melanie-purple after:left-0 after:bottom-0 after:transition-all hover:after:w-full flex items-center">
             <Music className="mr-1 h-4 w-4" /> Medios
+          </Link>
+          <Link to="/game" className="text-white hover:text-melanie-purple transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-melanie-purple after:left-0 after:bottom-0 after:transition-all hover:after:w-full flex items-center">
+            <Gamepad className="mr-1 h-4 w-4" /> Juego
           </Link>
           {hasCompletedHunt && (
             <Link to="/secret-gallery" className="text-green-400 hover:text-green-300 transition-colors relative after:content-[''] after:absolute after:w-0 after:h-0.5 after:bg-green-400 after:left-0 after:bottom-0 after:transition-all hover:after:w-full flex items-center">

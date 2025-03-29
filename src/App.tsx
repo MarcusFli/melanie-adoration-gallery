@@ -14,6 +14,7 @@ import SharedMediaPage from "./pages/SharedMediaPage";
 import PlaylistPage from "./pages/PlaylistPage";
 import NotFound from "./pages/NotFound";
 import SecretGallery from "./pages/SecretGallery";
+import GamePage from "./pages/GamePage";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/shared-media" element={<SharedMediaPage />} />
               <Route path="/playlist" element={<PlaylistPage />} />
               <Route path="/secret-gallery" element={<SecretGallery />} />
+              <Route path="/game" element={<GamePage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
