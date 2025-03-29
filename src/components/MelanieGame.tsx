@@ -1,13 +1,22 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Ghost, Heart, Skull, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
-import { toast } from "@/components/ui/use-toast";
+import { Ghost, Heart, Skull, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Trophy } from 'lucide-react';
+import { toast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
+import ImageLoader from './ImageLoader';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Game constants
 const GRID_SIZE = 10;
 const GHOST_COUNT = 5;
 const SPEED = 200; // ms per move
+const ACHIEVEMENT_LEVEL = 10;
 
 interface Position {
   x: number;
@@ -27,6 +36,8 @@ const MelanieGame: React.FC = () => {
   const [score, setScore] = useState<number>(0);
   const [level, setLevel] = useState<number>(1);
   const [showControls, setShowControls] = useState<boolean>(true);
+  const [showAchievementDialog, setShowAchievementDialog] = useState<boolean>(false);
+  const [achievementUnlocked, setAchievementUnlocked] = useState<boolean>(false);
 
   // Initialize game
   useEffect(() => {
@@ -41,6 +52,7 @@ const MelanieGame: React.FC = () => {
     setWon(false);
     setScore(0);
     setLevel(1);
+    setAchievementUnlocked(false);
     
     // Create initial ghosts
     const initialGhosts = [];
@@ -130,7 +142,15 @@ const MelanieGame: React.FC = () => {
       
       // Level up
       setTimeout(() => {
-        setLevel(prevLevel => prevLevel + 1);
+        const newLevel = level + 1;
+        setLevel(newLevel);
+        
+        // Check for achievement
+        if (newLevel === ACHIEVEMENT_LEVEL && !achievementUnlocked) {
+          setAchievementUnlocked(true);
+          setShowAchievementDialog(true);
+        }
+        
         const newGhostCount = GHOST_COUNT + level;
         const newGhosts = [];
         for (let i = 0; i < newGhostCount; i++) {
@@ -145,7 +165,7 @@ const MelanieGame: React.FC = () => {
         setWon(false);
         
         toast({
-          title: `¡Nivel ${level + 1}!`,
+          title: `¡Nivel ${newLevel}!`,
           description: "Los fantasmas son más numerosos ahora. ¡Ten cuidado!",
           variant: "default",
           className: "bg-melanie-purple text-white"
@@ -225,7 +245,18 @@ const MelanieGame: React.FC = () => {
         
         // Check if Melanie is here
         if (melanie.x === x && melanie.y === y) {
-          content = <div className="w-full h-full flex items-center justify-center text-white">M</div>;
+          // Show Melanie's image instead of "M" text
+          content = (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="w-full h-full overflow-hidden rounded-full">
+                <ImageLoader
+                  src="/lovable-uploads/3a61898a-222f-4f13-bd6f-7ca84930e572.png"
+                  alt="Melanie"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          );
           cellClass = "bg-melanie-purple/40 border border-melanie-purple/50";
         }
         // Check if lover is here
@@ -350,6 +381,41 @@ const MelanieGame: React.FC = () => {
           <p>Ayuda a Melanie a llegar hasta su amado (♥) evitando a los fantasmas.</p>
         </div>
       </div>
+
+      {/* Level 10 Achievement Dialog */}
+      <Dialog open={showAchievementDialog} onOpenChange={setShowAchievementDialog}>
+        <DialogContent className="bg-black border border-melanie-purple/50 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2 text-melanie-purple">
+              <Trophy className="h-6 w-6" /> ¡Logro Desbloqueado!
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Has alcanzado el nivel {ACHIEVEMENT_LEVEL} y desbloqueado un nuevo personaje
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center py-6">
+            <div className="relative w-64 h-64 mb-4 rounded-lg overflow-hidden border-4 border-melanie-purple/50 shadow-lg shadow-melanie-purple/30">
+              <ImageLoader
+                src="/lovable-uploads/f15488f5-ed08-4d00-9aee-533cd4744d7c.png"
+                alt="Personaje desbloqueado"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">¡Amigo secreto de Melanie!</h3>
+            <p className="text-center text-gray-300">
+              Este personaje especial aparecerá en tus próximas aventuras. ¡Continúa jugando para descubrir más sorpresas!
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Button 
+              className="bg-melanie-purple hover:bg-melanie-purple/80"
+              onClick={() => setShowAchievementDialog(false)}
+            >
+              Continuar la aventura
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

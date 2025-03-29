@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import NavBar from '../components/NavBar';
 import EasterEggHuntStatus from '../components/EasterEggHuntStatus';
@@ -8,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import EasterEgg from '../components/EasterEgg';
 import ImageLoader from '../components/ImageLoader';
 import MelanieGame from '../components/MelanieGame';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 const GamePage: React.FC = () => {
   const [showGame, setShowGame] = useState(false);
