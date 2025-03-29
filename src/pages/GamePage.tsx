@@ -6,6 +6,7 @@ import { Ghost, Skull } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import EasterEgg from '../components/EasterEgg';
+import ImageLoader from '../components/ImageLoader';
 
 const GamePage: React.FC = () => {
   return (
@@ -53,12 +54,13 @@ const GamePage: React.FC = () => {
               </CardFooter>
             </Card>
             
-            {/* Game screenshot */}
+            {/* Game screenshot - Using ImageLoader for better error handling */}
             <div className="relative rounded-lg overflow-hidden h-full shadow-lg shadow-melanie-purple/20 flex items-center justify-center">
               <div className="absolute inset-0 bg-black/40 z-10"></div>
-              <img 
-                src="/lovable-uploads/907988a3-dd91-483c-ae79-7671727ab1de.png" 
-                alt="Melanie en un bosque oscuro" 
+              <ImageLoader
+                src="/lovable-uploads/907988a3-dd91-483c-ae79-7671727ab1de.png"
+                alt="Melanie en un bosque oscuro"
+                containerClassName="w-full h-full"
                 className="w-full h-full object-cover"
               />
               <div className="absolute z-20 inset-0 flex flex-col items-center justify-center">
