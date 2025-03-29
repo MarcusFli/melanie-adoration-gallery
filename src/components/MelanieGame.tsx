@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Ghost, Heart, Skull, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Trophy } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Ghost, Heart, Skull, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Trophy, Volume2, VolumeX } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
 import ImageLoader from './ImageLoader';
@@ -15,7 +15,7 @@ import {
 // Game constants
 const GRID_SIZE = 10;
 const GHOST_COUNT = 5;
-const SPEED = 200; // ms per move
+const GHOST_SPEED = 200; // ms per move
 const ACHIEVEMENT_LEVEL = 10;
 
 interface Position {
@@ -25,6 +25,7 @@ interface Position {
 
 interface GameEntity extends Position {
   id: number;
+  direction?: number; // 0: up, 1: down, 2: left, 3: right
 }
 
 const MelanieGame: React.FC = () => {
@@ -38,11 +39,56 @@ const MelanieGame: React.FC = () => {
   const [showControls, setShowControls] = useState<boolean>(true);
   const [showAchievementDialog, setShowAchievementDialog] = useState<boolean>(false);
   const [achievementUnlocked, setAchievementUnlocked] = useState<boolean>(false);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const ghostMoveInterval = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize game
   useEffect(() => {
     startGame();
+    
+    // Initialize audio
+    const audio = new Audio('/lovable-uploads/c933c249-c927-447f-8e72-a4c08a0764e9.png');
+    audio.loop = true;
+    audio.volume = 0.5;
+    audioRef.current = audio;
+    
+    // Clean up audio on component unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+      
+      if (ghostMoveInterval.current) {
+        clearInterval(ghostMoveInterval.current);
+      }
+    };
   }, []);
+
+  // Toggle sound
+  const toggleSound = () => {
+    if (audioRef.current) {
+      if (soundEnabled) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(err => {
+          console.error("Audio playback failed:", err);
+        });
+      }
+      setSoundEnabled(!soundEnabled);
+    }
+  };
+
+  // Play soundtrack when game starts
+  useEffect(() => {
+    if (audioRef.current && soundEnabled && !gameOver) {
+      audioRef.current.play().catch(err => {
+        console.error("Audio playback failed:", err);
+        setSoundEnabled(false);
+      });
+    }
+  }, [soundEnabled, gameOver]);
 
   const startGame = () => {
     // Reset game state
@@ -54,16 +100,25 @@ const MelanieGame: React.FC = () => {
     setLevel(1);
     setAchievementUnlocked(false);
     
-    // Create initial ghosts
+    // Clear existing ghost interval
+    if (ghostMoveInterval.current) {
+      clearInterval(ghostMoveInterval.current);
+    }
+    
+    // Create initial ghosts with directions
     const initialGhosts = [];
     for (let i = 0; i < GHOST_COUNT; i++) {
       initialGhosts.push({
         id: i,
         x: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
         y: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
+        direction: Math.floor(Math.random() * 4)
       });
     }
     setGhosts(initialGhosts);
+    
+    // Set up ghost movement interval
+    startGhostMovement();
     
     toast({
       title: "¡Comienza la aventura!",
@@ -71,6 +126,24 @@ const MelanieGame: React.FC = () => {
       variant: "default",
       className: "bg-melanie-purple text-white"
     });
+  };
+
+  // Start continuous ghost movement
+  const startGhostMovement = () => {
+    // Clear any existing interval
+    if (ghostMoveInterval.current) {
+      clearInterval(ghostMoveInterval.current);
+    }
+    
+    // Calculate speed based on level - ghosts move faster as level increases
+    const adjustedSpeed = Math.max(GHOST_SPEED - (level * 10), 80);
+    
+    // Set new interval for ghost movement
+    ghostMoveInterval.current = setInterval(() => {
+      if (!gameOver && !won) {
+        moveGhosts();
+      }
+    }, adjustedSpeed);
   };
 
   // Handle keyboard input
@@ -151,18 +224,23 @@ const MelanieGame: React.FC = () => {
           setShowAchievementDialog(true);
         }
         
-        const newGhostCount = GHOST_COUNT + level;
+        // More ghosts per level
+        const newGhostCount = GHOST_COUNT + Math.min(newLevel, 15);
         const newGhosts = [];
         for (let i = 0; i < newGhostCount; i++) {
           newGhosts.push({
             id: i,
             x: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
             y: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
+            direction: Math.floor(Math.random() * 4)
           });
         }
         setGhosts(newGhosts);
         setMelanie({ x: 0, y: 0 });
         setWon(false);
+        
+        // Adjust ghost movement speed for new level
+        startGhostMovement();
         
         toast({
           title: `¡Nivel ${newLevel}!`,
@@ -173,39 +251,67 @@ const MelanieGame: React.FC = () => {
       }, 2000);
     }
     
-    // Move ghosts
-    moveGhosts();
+    // Check for ghost collisions
+    checkCollisions(ghosts);
   };
 
+  // Ghost movement logic
   const moveGhosts = () => {
-    const newGhosts = ghosts.map(ghost => {
-      // Random movement
-      const direction = Math.floor(Math.random() * 4);
-      let newX = ghost.x;
-      let newY = ghost.y;
+    setGhosts(prevGhosts => {
+      const newGhosts = prevGhosts.map(ghost => {
+        // Randomly change direction sometimes to make movement less predictable
+        const shouldChangeDirection = Math.random() < 0.2;
+        let newDirection = shouldChangeDirection 
+          ? Math.floor(Math.random() * 4) 
+          : ghost.direction;
+        
+        // Occasionally, make ghosts move towards Melanie (smarter ghosts)
+        // Higher levels increase the chance of "smart" movement
+        const shouldTrackMelanie = Math.random() < (0.05 * level);
+        
+        if (shouldTrackMelanie) {
+          // Determine whether to move on X or Y axis
+          const moveOnXAxis = Math.random() > 0.5;
+          
+          if (moveOnXAxis) {
+            newDirection = ghost.x < melanie.x ? 3 : 2; // right : left
+          } else {
+            newDirection = ghost.y < melanie.y ? 1 : 0; // down : up
+          }
+        }
+        
+        let newX = ghost.x;
+        let newY = ghost.y;
+        
+        // Move based on direction
+        switch (newDirection) {
+          case 0: // up
+            newY = Math.max(0, ghost.y - 1);
+            break;
+          case 1: // down
+            newY = Math.min(GRID_SIZE - 1, ghost.y + 1);
+            break;
+          case 2: // left
+            newX = Math.max(0, ghost.x - 1);
+            break;
+          case 3: // right
+            newX = Math.min(GRID_SIZE - 1, ghost.x + 1);
+            break;
+        }
+        
+        // If ghost can't move in the chosen direction (at edge), pick a new direction
+        if (newX === ghost.x && newY === ghost.y) {
+          newDirection = Math.floor(Math.random() * 4);
+        }
+        
+        return { ...ghost, x: newX, y: newY, direction: newDirection };
+      });
       
-      switch (direction) {
-        case 0: // up
-          newY = Math.max(0, ghost.y - 1);
-          break;
-        case 1: // down
-          newY = Math.min(GRID_SIZE - 1, ghost.y + 1);
-          break;
-        case 2: // left
-          newX = Math.max(0, ghost.x - 1);
-          break;
-        case 3: // right
-          newX = Math.min(GRID_SIZE - 1, ghost.x + 1);
-          break;
-      }
-      
-      return { ...ghost, x: newX, y: newY };
+      return newGhosts;
     });
     
-    setGhosts(newGhosts);
-    
-    // Check for collisions
-    checkCollisions(newGhosts);
+    // Check for collisions after ghosts move
+    checkCollisions(ghosts);
   };
 
   const checkCollisions = (currentGhosts: GameEntity[]) => {
@@ -216,6 +322,13 @@ const MelanieGame: React.FC = () => {
     
     if (collision) {
       setGameOver(true);
+      
+      // Clear ghost movement interval
+      if (ghostMoveInterval.current) {
+        clearInterval(ghostMoveInterval.current);
+        ghostMoveInterval.current = null;
+      }
+      
       toast({
         title: "¡Juego terminado!",
         description: `Los fantasmas atraparon a Melanie. Puntuación final: ${score}`,
@@ -268,13 +381,21 @@ const MelanieGame: React.FC = () => {
         else {
           const ghost = ghosts.find(g => g.x === x && g.y === y);
           if (ghost) {
-            content = <Ghost className="w-5 h-5 text-white/70" />;
+            content = (
+              <Ghost 
+                className="w-5 h-5 text-white/70 animate-pulse" 
+                style={{ 
+                  animation: 'ghost-float 1.5s ease-in-out infinite alternate',
+                  transform: `rotate(${ghost.direction === 2 ? -90 : ghost.direction === 3 ? 90 : ghost.direction === 0 ? 0 : 180}deg)`
+                }} 
+              />
+            );
             cellClass = "bg-black/50 border border-melanie-purple/30";
           }
         }
         
         row.push(
-          <div key={`${x}-${y}`} className={`w-full aspect-square ${cellClass} flex items-center justify-center`}>
+          <div key={`${x}-${y}`} className={`w-full aspect-square ${cellClass} flex items-center justify-center transition-all duration-200`}>
             {content}
           </div>
         );
@@ -305,6 +426,21 @@ const MelanieGame: React.FC = () => {
         </div>
         
         <div className="relative mx-auto w-full max-w-lg">
+          {/* Sound toggle */}
+          <div className="absolute top-2 right-2 z-10">
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="bg-black/40 border-melanie-purple/30 hover:bg-melanie-purple/30 h-8 w-8"
+              onClick={toggleSound}
+            >
+              {soundEnabled ? 
+                <Volume2 className="h-4 w-4 text-white" /> : 
+                <VolumeX className="h-4 w-4 text-white" />
+              }
+            </Button>
+          </div>
+          
           {/* Game board */}
           <div className="grid-container mb-4">
             {renderGrid()}
@@ -416,6 +552,16 @@ const MelanieGame: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Hidden audio element */}
+      <style jsx="true">
+        {`
+          @keyframes ghost-float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-5px); }
+          }
+        `}
+      </style>
     </div>
   );
 };
