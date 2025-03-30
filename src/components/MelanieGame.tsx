@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   ArrowUp, ArrowDown, ArrowLeft, ArrowRight, 
-  Trophy, Volume2, VolumeX, Cat, HeartCrack, Sparkles
+  Trophy, Volume2, VolumeX, Cat, HeartCrack, Sparkles, Skull
 } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
