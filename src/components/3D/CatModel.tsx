@@ -15,24 +15,35 @@ const CatModel: React.FC<CatModelProps> = ({ position }) => {
   const [hovered, setHovered] = useState(false);
   const [textureLoaded, setTextureLoaded] = useState(false);
   
-  // Use a fallback texture from Unsplash instead of the broken one
-  const catTexture = useTexture(
-    'https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=512&h=512',
-    (texture) => {
-      // Texture loaded successfully
+  // Use a fallback texture from Unsplash
+  const catTexture = useTexture('https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=512&h=512');
+  
+  // Configure texture when it's loaded
+  useEffect(() => {
+    if (catTexture) {
       setTextureLoaded(true);
-      if (texture) {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.NearestFilter;
-      }
-    },
-    (error) => {
-      // Texture failed to load
-      console.error("Failed to load cat texture:", error);
-      setTextureLoaded(false);
+      catTexture.colorSpace = THREE.SRGBColorSpace;
+      catTexture.minFilter = THREE.LinearFilter;
+      catTexture.magFilter = THREE.NearestFilter;
     }
-  );
+  }, [catTexture]);
+
+  // Handle texture loading errors
+  useEffect(() => {
+    const handleError = () => {
+      console.error("Failed to load cat texture");
+      setTextureLoaded(false);
+    };
+    
+    // Add error event listener to image
+    if (catTexture && catTexture.source && catTexture.source.data) {
+      catTexture.source.data.addEventListener('error', handleError);
+      
+      return () => {
+        catTexture.source.data.removeEventListener('error', handleError);
+      };
+    }
+  }, [catTexture]);
 
   useFrame((state) => {
     if (groupRef.current) {
