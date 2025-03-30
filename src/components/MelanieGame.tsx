@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Ghost, Heart, Skull, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Trophy, Volume2, VolumeX } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
@@ -554,7 +553,7 @@ const MelanieGame: React.FC = () => {
       </Dialog>
       
       {/* Hidden audio element */}
-      <style jsx="true">
+      <style>
         {`
           @keyframes ghost-float {
             0% { transform: translateY(0px); }
