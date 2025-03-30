@@ -9,56 +9,108 @@ interface CatModelProps {
 }
 
 const CatModel: React.FC<CatModelProps> = ({ position }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  // Using a cat image for texture
-  const texture = useTexture('/lovable-uploads/f15488f5-ed08-4d00-9aee-533cd4744d7c.png');
+  const groupRef = useRef<THREE.Group>(null);
+  const bodyRef = useRef<THREE.Mesh>(null);
+  const headRef = useRef<THREE.Mesh>(null);
+  // Use the cat image texture
+  const texture = useTexture('/lovable-uploads/320954f8-fe29-4097-b8c9-3d4e0aaf3d52.png');
   const [hovered, setHovered] = useState(false);
   
   useEffect(() => {
     if (texture) {
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.NearestFilter; // Helps with pixelated textures
+      texture.magFilter = THREE.NearestFilter;
     }
   }, [texture]);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      // Rotate cat slowly
-      meshRef.current.rotation.y += 0.01;
+    if (groupRef.current) {
+      // Gentle rotation
+      groupRef.current.rotation.y += 0.005;
       
       // Make it float
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+      groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.5) * 0.05;
+      
+      // Tail movement
+      if (bodyRef.current) {
+        bodyRef.current.scale.y = 1 + Math.sin(state.clock.elapsedTime * 2.5) * 0.02;
+      }
+      
+      // Head movement
+      if (headRef.current) {
+        headRef.current.rotation.y = Math.sin(state.clock.elapsedTime) * 0.2;
+      }
       
       // Glow effect when hovered
-      if (hovered) {
-        meshRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 4) * 0.05);
+      if (hovered && groupRef.current) {
+        groupRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 4) * 0.05);
       }
     }
   });
 
+  // Cream color for the cat
+  const catColor = new THREE.Color('#f5e8d8');
+  
   return (
-    <group>
-      <mesh
-        ref={meshRef}
-        position={position}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+    <group 
+      ref={groupRef}
+      position={position}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
+      {/* Cat body */}
+      <mesh 
+        ref={bodyRef}
+        position={[0, 0.05, 0]}
         castShadow
       >
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <capsuleGeometry args={[0.25, 0.5, 8, 16]} />
         <meshStandardMaterial 
-          map={texture} 
-          emissive="#ffcc00" 
-          emissiveIntensity={hovered ? 0.5 : 0.2} 
+          color={catColor}
           roughness={0.7}
+          emissive="#ffeecc"
+          emissiveIntensity={hovered ? 0.3 : 0.1}
         />
       </mesh>
+      
+      {/* Cat head with texture */}
+      <mesh 
+        ref={headRef}
+        position={[0, 0.25, 0.3]}
+        castShadow
+      >
+        <sphereGeometry args={[0.25, 16, 16]} />
+        <meshStandardMaterial 
+          map={texture}
+          roughness={0.7}
+          emissive="#ffeecc"
+          emissiveIntensity={hovered ? 0.3 : 0.1}
+        />
+      </mesh>
+      
+      {/* Ears */}
+      <mesh position={[0.15, 0.45, 0.3]} rotation={[0, 0, 0.5]} castShadow>
+        <coneGeometry args={[0.08, 0.2, 16]} />
+        <meshStandardMaterial color={catColor} />
+      </mesh>
+      
+      <mesh position={[-0.15, 0.45, 0.3]} rotation={[0, 0, -0.5]} castShadow>
+        <coneGeometry args={[0.08, 0.2, 16]} />
+        <meshStandardMaterial color={catColor} />
+      </mesh>
+      
+      {/* Tail */}
+      <mesh position={[0, 0, -0.4]} rotation={[0.5, 0, 0]} castShadow>
+        <capsuleGeometry args={[0.05, 0.6, 8, 16]} />
+        <meshStandardMaterial color={catColor} />
+      </mesh>
+      
       {/* Add a subtle light around the cat */}
       <pointLight 
-        position={[position[0], position[1] + 0.5, position[2]]} 
+        position={[0, 0.5, 0]} 
         intensity={0.6} 
-        color="#ffcc00" 
+        color="#ffffcc" 
         distance={2}
         decay={2}
       />

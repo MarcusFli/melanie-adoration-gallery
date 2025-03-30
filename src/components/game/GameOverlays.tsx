@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HeartCrack, Sparkles, Skull, Cat } from 'lucide-react';
+import { HeartCrack, Sparkles, Skull, Cat, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/hooks/useGameState';
 
@@ -35,11 +35,28 @@ const GameOverlays: React.FC<GameOverlaysProps> = ({
               Con cada nivel, el laberinto se vuelve más grande y complejo. ¡Usa las flechas para moverte 
               y encuentra el camino!
             </p>
-            <div className="bg-melanie-purple/20 p-4 rounded-lg">
-              <p className="text-white text-sm">
-                <strong>Controles:</strong> Usa las flechas para moverte. Primero giras en la dirección 
-                que quieres ir, luego avanzas presionando la misma tecla nuevamente.
+            <div className="bg-melanie-purple/20 p-4 rounded-lg mb-4">
+              <p className="text-white text-sm mb-2">
+                <strong>Controles:</strong>
               </p>
+              <ul className="text-white text-sm space-y-2">
+                <li className="flex items-center">
+                  <RotateCcw className="w-4 h-4 mr-2 text-melanie-purple" />
+                  <span>Ahora puedes moverte en 360 grados por el laberinto</span>
+                </li>
+                <li>
+                  <span className="font-semibold">Flecha arriba:</span> Moverse hacia adelante
+                </li>
+                <li>
+                  <span className="font-semibold">Flecha abajo:</span> Moverse hacia atrás
+                </li>
+                <li>
+                  <span className="font-semibold">Flecha izquierda:</span> Girar a la izquierda
+                </li>
+                <li>
+                  <span className="font-semibold">Flecha derecha:</span> Girar a la derecha
+                </li>
+              </ul>
             </div>
           </div>
           <Button

@@ -19,7 +19,7 @@ export function useGameControls({
 }: UseGameControlsProps) {
   const { playerPosition, playerDirection, maze, gameOver, won } = gameState;
 
-  // Handle keyboard input
+  // Handle keyboard input with 360 degree movement
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (gameOver || won || showStory) return;
     
@@ -31,45 +31,66 @@ export function useGameControls({
     
     switch (e.key) {
       case 'ArrowUp':
-        if (playerDirection === 0) { // Already facing north
-          newY -= 1;
-          canMove = !maze.grid[y][x].walls.top;
-        } else {
-          newDirection = 0; // Turn to face north
+        // Move forward in the current direction
+        switch (playerDirection) {
+          case 0: // North
+            newY -= 1;
+            canMove = !maze.grid[y][x].walls.top;
+            break;
+          case 1: // East
+            newX += 1;
+            canMove = !maze.grid[y][x].walls.right;
+            break;
+          case 2: // South
+            newY += 1;
+            canMove = !maze.grid[y][x].walls.bottom;
+            break;
+          case 3: // West
+            newX -= 1;
+            canMove = !maze.grid[y][x].walls.left;
+            break;
         }
         break;
+        
       case 'ArrowDown':
-        if (playerDirection === 2) { // Already facing south
-          newY += 1;
-          canMove = !maze.grid[y][x].walls.bottom;
-        } else {
-          newDirection = 2; // Turn to face south
+        // Move backward in the current direction
+        switch (playerDirection) {
+          case 0: // North (backwards = South)
+            newY += 1;
+            canMove = !maze.grid[y][x].walls.bottom;
+            break;
+          case 1: // East (backwards = West)
+            newX -= 1;
+            canMove = !maze.grid[y][x].walls.left;
+            break;
+          case 2: // South (backwards = North)
+            newY -= 1;
+            canMove = !maze.grid[y][x].walls.top;
+            break;
+          case 3: // West (backwards = East)
+            newX += 1;
+            canMove = !maze.grid[y][x].walls.right;
+            break;
         }
         break;
+        
       case 'ArrowLeft':
-        if (playerDirection === 3) { // Already facing west
-          newX -= 1;
-          canMove = !maze.grid[y][x].walls.left;
-        } else {
-          newDirection = 3; // Turn to face west
-        }
-        break;
+        // Rotate counter-clockwise
+        newDirection = (playerDirection + 3) % 4;
+        setPlayerDirection(newDirection);
+        return;
+        
       case 'ArrowRight':
-        if (playerDirection === 1) { // Already facing east
-          newX += 1;
-          canMove = !maze.grid[y][x].walls.right;
-        } else {
-          newDirection = 1; // Turn to face east
-        }
-        break;
+        // Rotate clockwise
+        newDirection = (playerDirection + 1) % 4;
+        setPlayerDirection(newDirection);
+        return;
+        
       default:
         return;
     }
     
-    // Always update direction
-    setPlayerDirection(newDirection);
-    
-    // Try to move if facing the right direction
+    // Try to move
     if (canMove) {
       movePlayer(newX, newY, playSound);
     } else if (newX !== x || newY !== y) {
@@ -78,7 +99,7 @@ export function useGameControls({
     }
   }, [playerPosition, playerDirection, maze, gameOver, won, showStory, setPlayerDirection, movePlayer, playSound]);
 
-  // Button movement controls
+  // Button movement controls with 360 degree movement
   const handleButtonMove = (direction: string) => {
     if (gameOver || won || showStory) return;
     
@@ -90,43 +111,63 @@ export function useGameControls({
     
     switch (direction) {
       case 'up':
-        if (playerDirection === 0) { // Already facing north
-          newY -= 1;
-          canMove = !maze.grid[y][x].walls.top;
-        } else {
-          newDirection = 0; // Turn to face north
+        // Move forward in the current direction
+        switch (playerDirection) {
+          case 0: // North
+            newY -= 1;
+            canMove = !maze.grid[y][x].walls.top;
+            break;
+          case 1: // East
+            newX += 1;
+            canMove = !maze.grid[y][x].walls.right;
+            break;
+          case 2: // South
+            newY += 1;
+            canMove = !maze.grid[y][x].walls.bottom;
+            break;
+          case 3: // West
+            newX -= 1;
+            canMove = !maze.grid[y][x].walls.left;
+            break;
         }
         break;
+        
       case 'down':
-        if (playerDirection === 2) { // Already facing south
-          newY += 1;
-          canMove = !maze.grid[y][x].walls.bottom;
-        } else {
-          newDirection = 2; // Turn to face south
+        // Move backward in the current direction
+        switch (playerDirection) {
+          case 0: // North (backwards = South)
+            newY += 1;
+            canMove = !maze.grid[y][x].walls.bottom;
+            break;
+          case 1: // East (backwards = West)
+            newX -= 1;
+            canMove = !maze.grid[y][x].walls.left;
+            break;
+          case 2: // South (backwards = North)
+            newY -= 1;
+            canMove = !maze.grid[y][x].walls.top;
+            break;
+          case 3: // West (backwards = East)
+            newX += 1;
+            canMove = !maze.grid[y][x].walls.right;
+            break;
         }
         break;
+        
       case 'left':
-        if (playerDirection === 3) { // Already facing west
-          newX -= 1;
-          canMove = !maze.grid[y][x].walls.left;
-        } else {
-          newDirection = 3; // Turn to face west
-        }
-        break;
+        // Rotate counter-clockwise
+        newDirection = (playerDirection + 3) % 4;
+        setPlayerDirection(newDirection);
+        return;
+        
       case 'right':
-        if (playerDirection === 1) { // Already facing east
-          newX += 1;
-          canMove = !maze.grid[y][x].walls.right;
-        } else {
-          newDirection = 1; // Turn to face east
-        }
-        break;
+        // Rotate clockwise
+        newDirection = (playerDirection + 1) % 4;
+        setPlayerDirection(newDirection);
+        return;
     }
     
-    // Always update direction
-    setPlayerDirection(newDirection);
-    
-    // Try to move if facing the right direction
+    // Try to move
     if (canMove) {
       movePlayer(newX, newY, playSound);
     } else if (newX !== x || newY !== y) {
