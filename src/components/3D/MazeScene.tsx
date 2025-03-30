@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, useHelper, Stats } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import MazeWall from './MazeWall';
 import MazeFloor from './MazeFloor';
@@ -21,10 +21,6 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
   const { grid, width, height, endPosition } = maze;
   const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const pointLightRef = useRef<THREE.PointLight>(null);
-  
-  // Debug light helpers (only in development)
-  // useHelper(directionalLightRef, THREE.DirectionalLightHelper, 1, 'red');
-  // useHelper(pointLightRef, THREE.PointLightHelper, 0.5, 'blue');
   
   const { camera } = useThree();
   
@@ -131,8 +127,6 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
         position={[width / 2, 5, height / 2]} 
         intensity={0.5} 
         castShadow 
-        shadow-mapSize-width={1024} 
-        shadow-mapSize-height={1024}
       />
       <pointLight 
         ref={pointLightRef}
@@ -172,7 +166,6 @@ const MazeScene: React.FC<MazeSceneProps> = (props) => {
       <Canvas shadows>
         <Scene {...props} />
         <OrbitControls enabled={false} />
-        {/* <Stats /> */}
       </Canvas>
     </div>
   );

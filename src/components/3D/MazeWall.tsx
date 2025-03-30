@@ -1,16 +1,15 @@
 
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { MeshProps } from '@react-three/fiber';
 import * as THREE from 'three';
 
-interface MazeWallProps extends MeshProps {
+interface MazeWallProps {
   position: [number, number, number];
   size: [number, number, number];
   color?: string;
 }
 
-const MazeWall: React.FC<MazeWallProps> = ({ position, size, color = '#8B5CF6', ...props }) => {
+const MazeWall: React.FC<MazeWallProps> = ({ position, size, color = '#8B5CF6' }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
@@ -21,7 +20,7 @@ const MazeWall: React.FC<MazeWallProps> = ({ position, size, color = '#8B5CF6', 
   });
 
   return (
-    <mesh position={position} ref={meshRef} castShadow receiveShadow {...props}>
+    <mesh position={position} ref={meshRef} castShadow receiveShadow>
       <boxGeometry args={size} />
       <meshStandardMaterial color={color} />
     </mesh>
