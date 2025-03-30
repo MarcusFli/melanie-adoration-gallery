@@ -12,17 +12,27 @@ const CatModel: React.FC<CatModelProps> = ({ position }) => {
   const groupRef = useRef<THREE.Group>(null);
   const bodyRef = useRef<THREE.Mesh>(null);
   const headRef = useRef<THREE.Mesh>(null);
-  // Use the cat image texture
-  const texture = useTexture('/lovable-uploads/320954f8-fe29-4097-b8c9-3d4e0aaf3d52.png');
   const [hovered, setHovered] = useState(false);
+  const [textureLoaded, setTextureLoaded] = useState(false);
   
-  useEffect(() => {
-    if (texture) {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.NearestFilter;
+  // Use a fallback texture from Unsplash instead of the broken one
+  const catTexture = useTexture(
+    'https://images.unsplash.com/photo-1582562124811-c09040d0a901?auto=format&fit=crop&w=512&h=512',
+    (texture) => {
+      // Texture loaded successfully
+      setTextureLoaded(true);
+      if (texture) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.NearestFilter;
+      }
+    },
+    (error) => {
+      // Texture failed to load
+      console.error("Failed to load cat texture:", error);
+      setTextureLoaded(false);
     }
-  }, [texture]);
+  );
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -82,7 +92,8 @@ const CatModel: React.FC<CatModelProps> = ({ position }) => {
       >
         <sphereGeometry args={[0.25, 16, 16]} />
         <meshStandardMaterial 
-          map={texture}
+          map={textureLoaded ? catTexture : null}
+          color={catColor}
           roughness={0.7}
           emissive="#ffeecc"
           emissiveIntensity={hovered ? 0.3 : 0.1}
