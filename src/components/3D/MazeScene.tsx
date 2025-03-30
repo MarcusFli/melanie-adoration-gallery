@@ -33,6 +33,11 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
         playerPosition.y + 2.5
       );
       camera.lookAt(playerPosition.x, 0.5, playerPosition.y);
+      
+      // Set optimized camera properties
+      camera.near = 0.1;
+      camera.far = 100;
+      camera.updateProjectionMatrix();
     }
   }, [camera, playerPosition]);
   
@@ -120,21 +125,21 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
   
   return (
     <>
-      {/* Main lighting */}
-      <ambientLight intensity={0.3} color="#b794f4" />
+      {/* Main lighting - optimized */}
+      <ambientLight intensity={0.4} color="#b794f4" />
       <directionalLight 
         ref={directionalLightRef}
         position={[width / 2, 5, height / 2]} 
-        intensity={0.5} 
+        intensity={0.4} 
         castShadow 
       />
       <pointLight 
         ref={pointLightRef}
         position={[playerPosition.x, 1.2, playerPosition.y]} 
-        intensity={1} 
+        intensity={0.8} 
         color="#9B87F5" 
         distance={4} 
-        castShadow
+        decay={2}
       />
       
       {/* Environment */}
@@ -154,8 +159,8 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
       {/* Cat at the end of the maze */}
       <CatModel position={[endPosition.x, 0.3, endPosition.y]} />
       
-      {/* Visual effects - fog */}
-      <fog attach="fog" args={['#120d24', 3, 8]} />
+      {/* Visual effects - optimized fog */}
+      <fog attach="fog" args={['#120d24', 3.5, 10]} />
     </>
   );
 };
@@ -163,7 +168,18 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
 const MazeScene: React.FC<MazeSceneProps> = (props) => {
   return (
     <div className="w-full h-96 relative">
-      <Canvas shadows>
+      <Canvas 
+        shadows={{
+          enabled: true,
+          type: THREE.PCFSoftShadowMap,
+        }}
+        gl={{ 
+          antialias: true,
+          alpha: false,
+          powerPreference: 'high-performance'
+        }}
+        dpr={[1, 2]} // Limit pixel ratio for better performance
+      >
         <Scene {...props} />
         <OrbitControls enabled={false} />
       </Canvas>

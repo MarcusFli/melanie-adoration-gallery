@@ -17,6 +17,8 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   useEffect(() => {
     if (texture) {
       texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.NearestFilter; // Helps with pixelated textures
     }
   }, [texture]);
 
@@ -42,7 +44,13 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   return (
     <mesh ref={meshRef} position={position} castShadow>
       <boxGeometry args={[0.6, 0.6, 0.6]} />
-      <meshStandardMaterial map={texture} />
+      <meshStandardMaterial 
+        map={texture} 
+        emissive="#6d28d9"
+        emissiveIntensity={0.15}
+        roughness={0.7} 
+      />
+      <pointLight intensity={0.2} distance={1.5} color="#9B87F5" />
     </mesh>
   );
 };

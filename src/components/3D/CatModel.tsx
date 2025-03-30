@@ -17,6 +17,8 @@ const CatModel: React.FC<CatModelProps> = ({ position }) => {
   useEffect(() => {
     if (texture) {
       texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.NearestFilter; // Helps with pixelated textures
     }
   }, [texture]);
 
@@ -36,16 +38,31 @@ const CatModel: React.FC<CatModelProps> = ({ position }) => {
   });
 
   return (
-    <mesh
-      ref={meshRef}
-      position={position}
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-      castShadow
-    >
-      <boxGeometry args={[0.5, 0.5, 0.5]} />
-      <meshStandardMaterial map={texture} emissive="#ffcc00" emissiveIntensity={hovered ? 0.5 : 0.2} />
-    </mesh>
+    <group>
+      <mesh
+        ref={meshRef}
+        position={position}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        castShadow
+      >
+        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <meshStandardMaterial 
+          map={texture} 
+          emissive="#ffcc00" 
+          emissiveIntensity={hovered ? 0.5 : 0.2} 
+          roughness={0.7}
+        />
+      </mesh>
+      {/* Add a subtle light around the cat */}
+      <pointLight 
+        position={[position[0], position[1] + 0.5, position[2]]} 
+        intensity={0.6} 
+        color="#ffcc00" 
+        distance={2}
+        decay={2}
+      />
+    </group>
   );
 };
 

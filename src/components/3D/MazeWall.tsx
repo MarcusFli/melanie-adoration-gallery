@@ -14,15 +14,17 @@ const MazeWall: React.FC<MazeWallProps> = ({ position, size, color = '#8B5CF6' }
   
   useFrame((state) => {
     if (meshRef.current && meshRef.current.material instanceof THREE.MeshStandardMaterial) {
-      // Optional: Add subtle animations to walls
-      meshRef.current.material.color.setHex(0x8B5CF6 + Math.sin(state.clock.elapsedTime * 0.5) * 0x111111);
+      // Simplified color animation to avoid flickering
+      const time = state.clock.elapsedTime * 0.3;
+      const colorValue = 0x8B5CF6 + Math.sin(time) * 0x080808;
+      meshRef.current.material.color.setHex(colorValue);
     }
   });
 
   return (
     <mesh position={position} ref={meshRef} castShadow receiveShadow>
       <boxGeometry args={size} />
-      <meshStandardMaterial color={color} />
+      <meshStandardMaterial color={color} roughness={0.7} metalness={0.2} />
     </mesh>
   );
 };
