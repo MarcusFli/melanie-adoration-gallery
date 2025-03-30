@@ -1,8 +1,13 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Ghost, Heart, Skull, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Trophy, Volume2, VolumeX } from 'lucide-react';
+import { 
+  ArrowUp, ArrowDown, ArrowLeft, ArrowRight, 
+  Trophy, Volume2, VolumeX, Cat, HeartCrack, Sparkles
+} from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
-import ImageLoader from './ImageLoader';
+import { generateMaze } from '@/utils/mazeGenerator';
+import MazeScene from './3D/MazeScene';
 import {
   Dialog,
   DialogContent,
@@ -10,38 +15,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import ImageLoader from './ImageLoader';
 
 // Game constants
-const GRID_SIZE = 10;
-const GHOST_COUNT = 5;
-const GHOST_SPEED = 200; // ms per move
-const ACHIEVEMENT_LEVEL = 10;
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface GameEntity extends Position {
-  id: number;
-  direction?: number; // 0: up, 1: down, 2: left, 3: right
-}
+const INITIAL_MAZE_SIZE = 5;
+const MAX_MAZE_SIZE = 15;
 
 const MelanieGame: React.FC = () => {
-  const [melanie, setMelanie] = useState<Position>({ x: 0, y: 0 });
-  const [lover, setLover] = useState<Position>({ x: GRID_SIZE - 1, y: GRID_SIZE - 1 });
-  const [ghosts, setGhosts] = useState<GameEntity[]>([]);
+  // Game state
+  const [level, setLevel] = useState<number>(1);
+  const [score, setScore] = useState<number>(0);
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [won, setWon] = useState<boolean>(false);
-  const [score, setScore] = useState<number>(0);
-  const [level, setLevel] = useState<number>(1);
   const [showControls, setShowControls] = useState<boolean>(true);
   const [showAchievementDialog, setShowAchievementDialog] = useState<boolean>(false);
   const [achievementUnlocked, setAchievementUnlocked] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const ghostMoveInterval = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
+  const [isMoving, setIsMoving] = useState<boolean>(false);
+  const [showStory, setShowStory] = useState<boolean>(true);
+  
+  // Maze state
+  const [maze, setMaze] = useState(generateMaze(INITIAL_MAZE_SIZE, INITIAL_MAZE_SIZE, 1));
+  const [playerPosition, setPlayerPosition] = useState({ x: maze.startPosition.x, y: maze.startPosition.y });
+  const [playerDirection, setPlayerDirection] = useState<number>(1); // 0: north, 1: east, 2: south, 3: west
+  
+  // Audio refs
+  const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
+  const effectsAudioRef = useRef<HTMLAudioElement | null>(null);
+  
   // Initialize game
   useEffect(() => {
     startGame();
@@ -49,29 +61,34 @@ const MelanieGame: React.FC = () => {
     // Initialize audio
     const audio = new Audio('/lovable-uploads/c933c249-c927-447f-8e72-a4c08a0764e9.png');
     audio.loop = true;
-    audio.volume = 0.5;
-    audioRef.current = audio;
+    audio.volume = 0.4;
+    backgroundAudioRef.current = audio;
+    
+    const effectsAudio = new Audio();
+    effectsAudio.volume = 0.6;
+    effectsAudioRef.current = effectsAudio;
     
     // Clean up audio on component unmount
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+      if (backgroundAudioRef.current) {
+        backgroundAudioRef.current.pause();
+        backgroundAudioRef.current.src = '';
       }
       
-      if (ghostMoveInterval.current) {
-        clearInterval(ghostMoveInterval.current);
+      if (effectsAudioRef.current) {
+        effectsAudioRef.current.pause();
+        effectsAudioRef.current.src = '';
       }
     };
   }, []);
 
   // Toggle sound
   const toggleSound = () => {
-    if (audioRef.current) {
+    if (backgroundAudioRef.current) {
       if (soundEnabled) {
-        audioRef.current.pause();
+        backgroundAudioRef.current.pause();
       } else {
-        audioRef.current.play().catch(err => {
+        backgroundAudioRef.current.play().catch(err => {
           console.error("Audio playback failed:", err);
         });
       }
@@ -81,8 +98,8 @@ const MelanieGame: React.FC = () => {
 
   // Play soundtrack when game starts
   useEffect(() => {
-    if (audioRef.current && soundEnabled && !gameOver) {
-      audioRef.current.play().catch(err => {
+    if (backgroundAudioRef.current && soundEnabled && !gameOver) {
+      backgroundAudioRef.current.play().catch(err => {
         console.error("Audio playback failed:", err);
         setSoundEnabled(false);
       });
@@ -91,123 +108,194 @@ const MelanieGame: React.FC = () => {
 
   const startGame = () => {
     // Reset game state
-    setMelanie({ x: 0, y: 0 });
-    setLover({ x: GRID_SIZE - 1, y: GRID_SIZE - 1 });
+    setLevel(1);
+    setScore(0);
     setGameOver(false);
     setWon(false);
-    setScore(0);
-    setLevel(1);
     setAchievementUnlocked(false);
     
-    // Clear existing ghost interval
-    if (ghostMoveInterval.current) {
-      clearInterval(ghostMoveInterval.current);
-    }
-    
-    // Create initial ghosts with directions
-    const initialGhosts = [];
-    for (let i = 0; i < GHOST_COUNT; i++) {
-      initialGhosts.push({
-        id: i,
-        x: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
-        y: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
-        direction: Math.floor(Math.random() * 4)
-      });
-    }
-    setGhosts(initialGhosts);
-    
-    // Set up ghost movement interval
-    startGhostMovement();
+    // Generate a new maze for level 1
+    const newMaze = generateMaze(INITIAL_MAZE_SIZE, INITIAL_MAZE_SIZE, 1);
+    setMaze(newMaze);
+    setPlayerPosition({ x: newMaze.startPosition.x, y: newMaze.startPosition.y });
+    setPlayerDirection(1); // Looking east initially
     
     toast({
       title: "¡Comienza la aventura!",
-      description: "Ayuda a Melanie a encontrar a su amado. Usa las flechas para moverte.",
+      description: "Ayuda a Melanie a encontrar a su gato perdido. Usa las flechas para moverte.",
       variant: "default",
       className: "bg-melanie-purple text-white"
     });
   };
 
-  // Start continuous ghost movement
-  const startGhostMovement = () => {
-    // Clear any existing interval
-    if (ghostMoveInterval.current) {
-      clearInterval(ghostMoveInterval.current);
+  // Play sound effects
+  const playSound = (type: 'move' | 'wall' | 'win' | 'lose') => {
+    if (!soundEnabled || !effectsAudioRef.current) return;
+    
+    let soundUrl = '';
+    switch(type) {
+      case 'move':
+        soundUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADwAD///////////////////////////////////////////8AAAA8TEFNRTMuMTAwAc0AAAAAAAAAABSAJAJAQgAAgAAAA8DcwePbAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=';
+        effectsAudioRef.current.volume = 0.3;
+        break;
+      case 'wall':
+        soundUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADwAD///////////////////////////////////////////8AAAA8TEFNRTMuMTAwAc0AAAAAAAAAABSAJAJAQgAAgAAAA8DI8Y/UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=';
+        effectsAudioRef.current.volume = 0.4;
+        break;
+      case 'win':
+        soundUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAEAAAGLwCEhISEhISEhISEhISEhISEhKurq6urq6urq6urq6urq6ur0dHR0dHR0dHR0dHR0dHR0dH///////////////////8AAAA8TEFNRTMuMTAwAc0AAAAAAAAAABSAJAJAQgAAgAAABi9CTsEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=';
+        effectsAudioRef.current.volume = 0.6;
+        break;
+      case 'lose':
+        soundUrl = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAAEAAAGvQCbm5ubm5ubm5ubm5ubm5ubm8PDw8PDw8PDw8PDw8PDw8PD5OTk5OTk5OTk5OTk5OTk5OT///////////////////8AAAA8TEFNRTMuMTAwAc0AAAAAAAAAABSAJAJAQgAAgAAABr125J/jAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=';
+        effectsAudioRef.current.volume = 0.5;
+        break;
     }
     
-    // Calculate speed based on level - ghosts move faster as level increases
-    const adjustedSpeed = Math.max(GHOST_SPEED - (level * 10), 80);
-    
-    // Set new interval for ghost movement
-    ghostMoveInterval.current = setInterval(() => {
-      if (!gameOver && !won) {
-        moveGhosts();
-      }
-    }, adjustedSpeed);
+    if (soundUrl) {
+      effectsAudioRef.current.src = soundUrl;
+      effectsAudioRef.current.play().catch(err => {
+        console.error("Sound effect failed:", err);
+      });
+    }
   };
 
   // Handle keyboard input
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (gameOver || won) return;
+    if (gameOver || won || showStory) return;
     
-    let newX = melanie.x;
-    let newY = melanie.y;
+    const { x, y } = playerPosition;
+    let newX = x;
+    let newY = y;
+    let newDirection = playerDirection;
+    let canMove = false;
     
     switch (e.key) {
       case 'ArrowUp':
-        newY = Math.max(0, melanie.y - 1);
+        if (playerDirection === 0) { // Already facing north
+          newY -= 1;
+          canMove = !maze.grid[y][x].walls.top;
+        } else {
+          newDirection = 0; // Turn to face north
+        }
         break;
       case 'ArrowDown':
-        newY = Math.min(GRID_SIZE - 1, melanie.y + 1);
+        if (playerDirection === 2) { // Already facing south
+          newY += 1;
+          canMove = !maze.grid[y][x].walls.bottom;
+        } else {
+          newDirection = 2; // Turn to face south
+        }
         break;
       case 'ArrowLeft':
-        newX = Math.max(0, melanie.x - 1);
+        if (playerDirection === 3) { // Already facing west
+          newX -= 1;
+          canMove = !maze.grid[y][x].walls.left;
+        } else {
+          newDirection = 3; // Turn to face west
+        }
         break;
       case 'ArrowRight':
-        newX = Math.min(GRID_SIZE - 1, melanie.x + 1);
+        if (playerDirection === 1) { // Already facing east
+          newX += 1;
+          canMove = !maze.grid[y][x].walls.right;
+        } else {
+          newDirection = 1; // Turn to face east
+        }
         break;
       default:
         return;
     }
     
-    movePlayer(newX, newY);
-  }, [melanie, gameOver, won, ghosts]);
+    // Always update direction
+    setPlayerDirection(newDirection);
+    
+    // Try to move if facing the right direction
+    if (canMove) {
+      movePlayer(newX, newY);
+    } else if (newX !== x || newY !== y) {
+      // Hit a wall
+      playSound('wall');
+    }
+  }, [playerPosition, playerDirection, maze, gameOver, won, showStory]);
 
   // Button movement controls
   const handleButtonMove = (direction: string) => {
-    if (gameOver || won) return;
+    if (gameOver || won || showStory) return;
     
-    let newX = melanie.x;
-    let newY = melanie.y;
+    const { x, y } = playerPosition;
+    let newX = x;
+    let newY = y;
+    let newDirection = playerDirection;
+    let canMove = false;
     
     switch (direction) {
       case 'up':
-        newY = Math.max(0, melanie.y - 1);
+        if (playerDirection === 0) { // Already facing north
+          newY -= 1;
+          canMove = !maze.grid[y][x].walls.top;
+        } else {
+          newDirection = 0; // Turn to face north
+        }
         break;
       case 'down':
-        newY = Math.min(GRID_SIZE - 1, melanie.y + 1);
+        if (playerDirection === 2) { // Already facing south
+          newY += 1;
+          canMove = !maze.grid[y][x].walls.bottom;
+        } else {
+          newDirection = 2; // Turn to face south
+        }
         break;
       case 'left':
-        newX = Math.max(0, melanie.x - 1);
+        if (playerDirection === 3) { // Already facing west
+          newX -= 1;
+          canMove = !maze.grid[y][x].walls.left;
+        } else {
+          newDirection = 3; // Turn to face west
+        }
         break;
       case 'right':
-        newX = Math.min(GRID_SIZE - 1, melanie.x + 1);
+        if (playerDirection === 1) { // Already facing east
+          newX += 1;
+          canMove = !maze.grid[y][x].walls.right;
+        } else {
+          newDirection = 1; // Turn to face east
+        }
         break;
     }
     
-    movePlayer(newX, newY);
+    // Always update direction
+    setPlayerDirection(newDirection);
+    
+    // Try to move if facing the right direction
+    if (canMove) {
+      movePlayer(newX, newY);
+    } else if (newX !== x || newY !== y) {
+      // Hit a wall
+      playSound('wall');
+    }
   };
 
   const movePlayer = (newX: number, newY: number) => {
-    // Update Melanie's position
-    setMelanie({ x: newX, y: newY });
+    // Play movement sound
+    playSound('move');
+    
+    // Show movement animation
+    setIsMoving(true);
+    setTimeout(() => setIsMoving(false), 300);
+    
+    // Update player position
+    setPlayerPosition({ x: newX, y: newY });
     setScore(prevScore => prevScore + 1);
     
-    // Check if reached lover
-    if (newX === lover.x && newY === lover.y) {
+    // Check if reached end (cat)
+    if (newX === maze.endPosition.x && newY === maze.endPosition.y) {
       setWon(true);
+      playSound('win');
+      
       toast({
-        title: "¡Victoria!",
-        description: `¡Melanie encontró a su amado! Nivel ${level} completado con ${score} puntos.`,
+        title: "¡Nivel completado!",
+        description: `Melanie ha avanzado al nivel ${level + 1}.`,
         variant: "default",
         className: "bg-green-500 text-white"
       });
@@ -217,122 +305,26 @@ const MelanieGame: React.FC = () => {
         const newLevel = level + 1;
         setLevel(newLevel);
         
-        // Check for achievement
-        if (newLevel === ACHIEVEMENT_LEVEL && !achievementUnlocked) {
+        // Check for achievement at level 10
+        if (newLevel === 10 && !achievementUnlocked) {
           setAchievementUnlocked(true);
           setShowAchievementDialog(true);
         }
         
-        // More ghosts per level
-        const newGhostCount = GHOST_COUNT + Math.min(newLevel, 15);
-        const newGhosts = [];
-        for (let i = 0; i < newGhostCount; i++) {
-          newGhosts.push({
-            id: i,
-            x: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
-            y: Math.floor(Math.random() * (GRID_SIZE - 2)) + 1,
-            direction: Math.floor(Math.random() * 4)
-          });
-        }
-        setGhosts(newGhosts);
-        setMelanie({ x: 0, y: 0 });
+        // Generate a new, larger maze
+        const newSize = Math.min(INITIAL_MAZE_SIZE + Math.floor(newLevel / 2), MAX_MAZE_SIZE);
+        const newMaze = generateMaze(newSize, newSize, newLevel);
+        setMaze(newMaze);
+        setPlayerPosition({ x: newMaze.startPosition.x, y: newMaze.startPosition.y });
         setWon(false);
-        
-        // Adjust ghost movement speed for new level
-        startGhostMovement();
         
         toast({
           title: `¡Nivel ${newLevel}!`,
-          description: "Los fantasmas son más numerosos ahora. ¡Ten cuidado!",
+          description: "El laberinto se vuelve más complejo. ¡Sigue buscando a tu gato!",
           variant: "default",
           className: "bg-melanie-purple text-white"
         });
       }, 2000);
-    }
-    
-    // Check for ghost collisions
-    checkCollisions(ghosts);
-  };
-
-  // Ghost movement logic
-  const moveGhosts = () => {
-    setGhosts(prevGhosts => {
-      const newGhosts = prevGhosts.map(ghost => {
-        // Randomly change direction sometimes to make movement less predictable
-        const shouldChangeDirection = Math.random() < 0.2;
-        let newDirection = shouldChangeDirection 
-          ? Math.floor(Math.random() * 4) 
-          : ghost.direction;
-        
-        // Occasionally, make ghosts move towards Melanie (smarter ghosts)
-        // Higher levels increase the chance of "smart" movement
-        const shouldTrackMelanie = Math.random() < (0.05 * level);
-        
-        if (shouldTrackMelanie) {
-          // Determine whether to move on X or Y axis
-          const moveOnXAxis = Math.random() > 0.5;
-          
-          if (moveOnXAxis) {
-            newDirection = ghost.x < melanie.x ? 3 : 2; // right : left
-          } else {
-            newDirection = ghost.y < melanie.y ? 1 : 0; // down : up
-          }
-        }
-        
-        let newX = ghost.x;
-        let newY = ghost.y;
-        
-        // Move based on direction
-        switch (newDirection) {
-          case 0: // up
-            newY = Math.max(0, ghost.y - 1);
-            break;
-          case 1: // down
-            newY = Math.min(GRID_SIZE - 1, ghost.y + 1);
-            break;
-          case 2: // left
-            newX = Math.max(0, ghost.x - 1);
-            break;
-          case 3: // right
-            newX = Math.min(GRID_SIZE - 1, ghost.x + 1);
-            break;
-        }
-        
-        // If ghost can't move in the chosen direction (at edge), pick a new direction
-        if (newX === ghost.x && newY === ghost.y) {
-          newDirection = Math.floor(Math.random() * 4);
-        }
-        
-        return { ...ghost, x: newX, y: newY, direction: newDirection };
-      });
-      
-      return newGhosts;
-    });
-    
-    // Check for collisions after ghosts move
-    checkCollisions(ghosts);
-  };
-
-  const checkCollisions = (currentGhosts: GameEntity[]) => {
-    // Check if Melanie collided with any ghost
-    const collision = currentGhosts.some(ghost => 
-      ghost.x === melanie.x && ghost.y === melanie.y
-    );
-    
-    if (collision) {
-      setGameOver(true);
-      
-      // Clear ghost movement interval
-      if (ghostMoveInterval.current) {
-        clearInterval(ghostMoveInterval.current);
-        ghostMoveInterval.current = null;
-      }
-      
-      toast({
-        title: "¡Juego terminado!",
-        description: `Los fantasmas atraparon a Melanie. Puntuación final: ${score}`,
-        variant: "destructive"
-      });
     }
   };
 
@@ -344,71 +336,6 @@ const MelanieGame: React.FC = () => {
     };
   }, [handleKeyDown]);
 
-  // Render the game grid
-  const renderGrid = () => {
-    const grid = [];
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-      const row = [];
-      for (let x = 0; x < GRID_SIZE; x++) {
-        // Determine cell content
-        let content = null;
-        let cellClass = "bg-melanie-purple-dark/20 border border-melanie-purple/20";
-        
-        // Check if Melanie is here
-        if (melanie.x === x && melanie.y === y) {
-          // Show Melanie's image instead of "M" text
-          content = (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="w-full h-full overflow-hidden rounded-full">
-                <ImageLoader
-                  src="/lovable-uploads/3a61898a-222f-4f13-bd6f-7ca84930e572.png"
-                  alt="Melanie"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-          );
-          cellClass = "bg-melanie-purple/40 border border-melanie-purple/50";
-        }
-        // Check if lover is here
-        else if (lover.x === x && lover.y === y) {
-          content = <Heart className="w-5 h-5 text-red-500" />;
-          cellClass = "bg-melanie-purple/10 border border-melanie-purple/50";
-        }
-        // Check if any ghost is here
-        else {
-          const ghost = ghosts.find(g => g.x === x && g.y === y);
-          if (ghost) {
-            content = (
-              <Ghost 
-                className="w-5 h-5 text-white/70 animate-pulse" 
-                style={{ 
-                  animation: 'ghost-float 1.5s ease-in-out infinite alternate',
-                  transform: `rotate(${ghost.direction === 2 ? -90 : ghost.direction === 3 ? 90 : ghost.direction === 0 ? 0 : 180}deg)`
-                }} 
-              />
-            );
-            cellClass = "bg-black/50 border border-melanie-purple/30";
-          }
-        }
-        
-        row.push(
-          <div key={`${x}-${y}`} className={`w-full aspect-square ${cellClass} flex items-center justify-center transition-all duration-200`}>
-            {content}
-          </div>
-        );
-      }
-      grid.push(
-        <div key={y} className="flex">
-          {row}
-        </div>
-      );
-    }
-    
-    return grid;
-  };
-
   return (
     <div className="w-full flex flex-col items-center">
       <div className="bg-black/60 border border-melanie-purple/30 rounded-lg p-4 mb-6 text-center w-full max-w-4xl">
@@ -417,14 +344,14 @@ const MelanieGame: React.FC = () => {
             <span className="text-gray-400">Nivel:</span> {level}
           </div>
           <div className="text-xl font-bold text-melanie-purple">
-            {gameOver ? "Game Over" : won ? "¡Victoria!" : "Melanie's Nightmare"}
+            {gameOver ? "Game Over" : won ? "¡Nivel completado!" : "Melanie's Lost Cat"}
           </div>
           <div className="text-white">
-            <span className="text-gray-400">Puntos:</span> {score}
+            <span className="text-gray-400">Movimientos:</span> {score}
           </div>
         </div>
         
-        <div className="relative mx-auto w-full max-w-lg">
+        <div className="relative mx-auto w-full">
           {/* Sound toggle */}
           <div className="absolute top-2 right-2 z-10">
             <Button 
@@ -440,16 +367,52 @@ const MelanieGame: React.FC = () => {
             </Button>
           </div>
           
-          {/* Game board */}
-          <div className="grid-container mb-4">
-            {renderGrid()}
+          {/* Story overlay */}
+          {showStory && (
+            <div className="absolute inset-0 z-20 bg-black/80 flex flex-col items-center justify-center p-6 rounded-lg">
+              <div className="mb-6 max-w-md text-center">
+                <HeartCrack className="w-12 h-12 text-melanie-purple mb-4 mx-auto" />
+                <h3 className="text-2xl font-semibold text-white mb-4">¡El gato de Melanie se ha perdido!</h3>
+                <p className="text-gray-300 mb-4">
+                  Melanie está desesperada por encontrar a su amado gato que se ha perdido en un laberinto
+                  misterioso. Ayúdala a navegar por los 10 niveles para reunirse con su mascota.
+                </p>
+                <p className="text-gray-300 mb-4">
+                  Con cada nivel, el laberinto se vuelve más grande y complejo. ¡Usa las flechas para moverte 
+                  y encuentra el camino!
+                </p>
+                <div className="bg-melanie-purple/20 p-4 rounded-lg">
+                  <p className="text-white text-sm">
+                    <strong>Controles:</strong> Usa las flechas para moverte. Primero giras en la dirección 
+                    que quieres ir, luego avanzas presionando la misma tecla nuevamente.
+                  </p>
+                </div>
+              </div>
+              <Button
+                className="bg-melanie-purple hover:bg-melanie-purple/80"
+                onClick={() => setShowStory(false)}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Comenzar Aventura
+              </Button>
+            </div>
+          )}
+          
+          {/* 3D Maze render */}
+          <div className="maze-container mb-4 h-96 overflow-hidden rounded-lg">
+            <MazeScene 
+              maze={maze}
+              playerPosition={playerPosition}
+              playerDirection={playerDirection}
+              isMoving={isMoving}
+            />
           </div>
           
           {/* Game over overlay */}
           {gameOver && (
             <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded">
               <Skull className="w-16 h-16 text-melanie-purple mb-4" />
-              <p className="text-xl text-white mb-4">¡Los fantasmas atraparon a Melanie!</p>
+              <p className="text-xl text-white mb-4">¡Te has perdido en el laberinto!</p>
               <Button 
                 className="bg-melanie-purple hover:bg-melanie-purple/80"
                 onClick={startGame}
@@ -513,7 +476,11 @@ const MelanieGame: React.FC = () => {
         </div>
         
         <div className="mt-6 text-gray-400 text-sm">
-          <p>Ayuda a Melanie a llegar hasta su amado (♥) evitando a los fantasmas.</p>
+          <p>Ayuda a Melanie a encontrar a su gato perdido en este misterioso laberinto.</p>
+          <div className="flex items-center justify-center gap-1 mt-2">
+            <Cat className="w-4 h-4 text-melanie-purple" />
+            <span>Nivel {level}/10</span>
+          </div>
         </div>
       </div>
 
@@ -525,20 +492,20 @@ const MelanieGame: React.FC = () => {
               <Trophy className="h-6 w-6" /> ¡Logro Desbloqueado!
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Has alcanzado el nivel {ACHIEVEMENT_LEVEL} y desbloqueado un nuevo personaje
+              Has alcanzado el nivel 10 y revelado la verdadera identidad del gato
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center py-6">
             <div className="relative w-64 h-64 mb-4 rounded-lg overflow-hidden border-4 border-melanie-purple/50 shadow-lg shadow-melanie-purple/30">
               <ImageLoader
                 src="/lovable-uploads/f15488f5-ed08-4d00-9aee-533cd4744d7c.png"
-                alt="Personaje desbloqueado"
+                alt="Gato mágico"
                 className="w-full h-full object-cover"
               />
             </div>
-            <h3 className="text-xl font-semibold mb-2">¡Amigo secreto de Melanie!</h3>
+            <h3 className="text-xl font-semibold mb-2">¡Un gato mágico!</h3>
             <p className="text-center text-gray-300">
-              Este personaje especial aparecerá en tus próximas aventuras. ¡Continúa jugando para descubrir más sorpresas!
+              Este gato especial tiene poderes místicos y ha elegido a Melanie como su compañera. ¡Completa todos los niveles para desbloquear su historia completa!
             </p>
           </div>
           <div className="flex justify-center">
@@ -552,7 +519,32 @@ const MelanieGame: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Hidden audio element */}
+      {/* Help dialog */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" size="sm" className="absolute bottom-4 right-4 bg-black/40 border-melanie-purple/30">
+            ?
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent className="bg-black border border-melanie-purple/50 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cómo jugar</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Usa las flechas del teclado o los botones en pantalla para moverte</li>
+                <li>Primero apuntas en la dirección que quieres ir, luego avanzas</li>
+                <li>Encuentra al gato para pasar al siguiente nivel</li>
+                <li>El objetivo es superar los 10 niveles</li>
+                <li>Con cada nivel, el laberinto se hace más grande y complejo</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction className="bg-melanie-purple hover:bg-melanie-purple/80">Entendido</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       <style>
         {`
           @keyframes ghost-float {
