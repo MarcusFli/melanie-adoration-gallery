@@ -41,22 +41,22 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   const jeansColor = new THREE.Color('#4a47a3');   // Jeans color
   
   // Create custom face texture
-  const faceTexture = new THREE.CanvasTexture(createFaceTexture());
+  const [faceTexture] = useState(() => new THREE.CanvasTexture(createFaceTexture()));
   
   // Create lips texture
-  const lipsTexture = new THREE.CanvasTexture(createLipsTexture());
+  const [lipsTexture] = useState(() => new THREE.CanvasTexture(createLipsTexture()));
   
   // Create eye texture with detailed iris and pupil
-  const eyeTexture = new THREE.CanvasTexture(createEyeTexture());
+  const [eyeTexture] = useState(() => new THREE.CanvasTexture(createEyeTexture()));
   
   // Create hair texture for more realistic look
-  const hairTexture = new THREE.CanvasTexture(createHairTexture());
+  const [hairTexture] = useState(() => new THREE.CanvasTexture(createHairTexture()));
   
   // Create clothing texture with pattern
-  const clothingTexture = new THREE.CanvasTexture(createClothingTexture());
+  const [clothingTexture] = useState(() => new THREE.CanvasTexture(createClothingTexture()));
   
   // Create ear texture
-  const earTexture = new THREE.CanvasTexture(createEarTexture());
+  const [earTexture] = useState(() => new THREE.CanvasTexture(createEarTexture()));
   
   function createEarTexture() {
     const canvas = document.createElement('canvas');
@@ -570,312 +570,315 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
       position={[position[0], position[1], position[2]]}
       castShadow
     >
-      {/* Main dress/body */}
-      <mesh ref={dressRef} position={[0, 0.4, 0]} castShadow>
-        <cylinderGeometry args={[0.22, 0.35, 0.7, 16]} />
-        <meshStandardMaterial 
-          map={clothingTexture}
-          color={clothesColor} 
-          roughness={0.6}
-          metalness={0.1}
-          emissive="#6d28d9"
-          emissiveIntensity={0.05}
-        />
-      </mesh>
-      
-      {/* Upper body/torso */}
-      <mesh ref={bodyRef} position={[0, 0.8, 0]} castShadow>
-        <cylinderGeometry args={[0.18, 0.22, 0.3, 16]} />
-        <meshStandardMaterial 
-          color={clothesColor} 
-          roughness={0.6}
-          metalness={0.1}
-          emissive="#6d28d9"
-          emissiveIntensity={0.05}
-        />
-      </mesh>
-      
-      {/* Dress decorative belt */}
-      <mesh position={[0, 0.7, 0]} castShadow>
-        <torusGeometry args={[0.22, 0.03, 16, 32]} />
-        <meshStandardMaterial 
-          color={darkerClothes} 
-          roughness={0.5}
-          metalness={0.2}
-        />
-      </mesh>
-      
-      {/* Neck */}
-      <mesh position={[0, 0.95, 0]} castShadow>
-        <cylinderGeometry args={[0.07, 0.07, 0.1, 16]} />
-        <meshStandardMaterial 
-          color={skinColor}
-          roughness={0.6}
-        />
-      </mesh>
-      
-      {/* Head - more realistic with face texture */}
-      <mesh ref={headRef} position={[0, 1.15, 0]} castShadow>
-        <sphereGeometry args={[0.25, 32, 32]} />
-        <meshStandardMaterial 
-          map={faceTexture}
-          color={skinColor}
-          roughness={0.6}
-        />
-      </mesh>
-      
-      {/* Eyes */}
-      <mesh ref={leftEyeRef} position={[-0.09, 1.2, 0.15]} castShadow>
-        <sphereGeometry args={[0.05, 16, 16, 0, Math.PI * 2, 0, Math.PI]} />
-        <meshStandardMaterial 
-          map={eyeTexture}
-          roughness={0.3}
-        />
-      </mesh>
-      
-      <mesh ref={rightEyeRef} position={[0.09, 1.2, 0.15]} castShadow>
-        <sphereGeometry args={[0.05, 16, 16, 0, Math.PI * 2, 0, Math.PI]} />
-        <meshStandardMaterial 
-          map={eyeTexture}
-          roughness={0.3}
-        />
-      </mesh>
-      
-      {/* Pupils (separate from eyes for animation) */}
-      <mesh ref={leftPupilRef} position={[-0.09, 1.2, 0.2]} castShadow>
-        <sphereGeometry args={[0.02, 16, 16]} />
-        <meshStandardMaterial 
-          color="black"
-          roughness={0.3}
-        />
-      </mesh>
-      
-      <mesh ref={rightPupilRef} position={[0.09, 1.2, 0.2]} castShadow>
-        <sphereGeometry args={[0.02, 16, 16]} />
-        <meshStandardMaterial 
-          color="black"
-          roughness={0.3}
-        />
-      </mesh>
-      
-      {/* Ears */}
-      <mesh ref={leftEarRef} position={[-0.25, 1.15, 0]} rotation={[0, -Math.PI/2, 0]} castShadow>
-        <sphereGeometry args={[0.06, 16, 16, 0, Math.PI, 0, Math.PI]} />
-        <meshStandardMaterial 
-          map={earTexture}
-          color={skinColor}
-          roughness={0.6}
-        />
-      </mesh>
-      
-      <mesh ref={rightEarRef} position={[0.25, 1.15, 0]} rotation={[0, Math.PI/2, 0]} castShadow>
-        <sphereGeometry args={[0.06, 16, 16, 0, Math.PI, 0, Math.PI]} />
-        <meshStandardMaterial 
-          map={earTexture}
-          color={skinColor}
-          roughness={0.6}
-        />
-      </mesh>
-      
-      {/* Mouth/Lips - more expressive */}
-      <mesh ref={mouthRef} position={[0, 1.05, 0.2]} rotation={[Math.PI / 6, 0, 0]} castShadow>
-        <planeGeometry args={[0.15, 0.05]} />
-        <meshStandardMaterial 
-          map={lipsTexture}
-          transparent={true}
-          roughness={0.5}
-        />
-      </mesh>
-      
-      {/* Main hair */}
-      <mesh ref={hairTopRef} position={[0, 1.25, 0]} castShadow>
-        <sphereGeometry args={[0.27, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial 
-          map={hairTexture}
-          color={hairColor} 
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Hair bangs */}
-      <mesh position={[0, 1.25, 0.15]} castShadow>
-        <boxGeometry args={[0.5, 0.25, 0.1]} />
-        <meshStandardMaterial 
-          map={hairTexture}
-          color={hairColor} 
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Hair volume on sides */}
-      <mesh position={[-0.2, 1.15, 0]} castShadow>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial 
-          map={hairTexture}
-          color={hairColor} 
-          roughness={0.8}
-        />
-      </mesh>
-      
-      <mesh position={[0.2, 1.15, 0]} castShadow>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial 
-          map={hairTexture}
-          color={hairColor} 
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Hair strands */}
-      <mesh position={[-0.2, 0.8, 0]} castShadow>
-        <cylinderGeometry args={[0.03, 0.03, 0.6, 8]} />
-        <meshStandardMaterial 
-          map={hairTexture}
-          color={hairColor} 
-          roughness={0.8}
-        />
-      </mesh>
-      
-      <mesh position={[0.2, 0.8, 0]} castShadow>
-        <cylinderGeometry args={[0.03, 0.03, 0.6, 8]} />
-        <meshStandardMaterial 
-          map={hairTexture}
-          color={hairColor} 
-          roughness={0.8}
-        />
-      </mesh>
-      
-      {/* Enhanced arms - more realistic joints and shape */}
-      <group position={[-0.25, 0.8, 0]} rotation={[0, 0, Math.PI * 0.1]}>
-        {/* Upper arm */}
+      {/* Position front of character to face Z direction by default */}
+      <group rotation={[0, Math.PI, 0]}>
+        {/* Main dress/body */}
+        <mesh ref={dressRef} position={[0, 0.4, 0]} castShadow>
+          <cylinderGeometry args={[0.22, 0.35, 0.7, 16]} />
+          <meshStandardMaterial 
+            map={clothingTexture}
+            color={clothesColor} 
+            roughness={0.6}
+            metalness={0.1}
+            emissive="#6d28d9"
+            emissiveIntensity={0.05}
+          />
+        </mesh>
+        
+        {/* Upper body/torso */}
+        <mesh ref={bodyRef} position={[0, 0.8, 0]} castShadow>
+          <cylinderGeometry args={[0.18, 0.22, 0.3, 16]} />
+          <meshStandardMaterial 
+            color={clothesColor} 
+            roughness={0.6}
+            metalness={0.1}
+            emissive="#6d28d9"
+            emissiveIntensity={0.05}
+          />
+        </mesh>
+        
+        {/* Dress decorative belt */}
+        <mesh position={[0, 0.7, 0]} castShadow>
+          <torusGeometry args={[0.22, 0.03, 16, 32]} />
+          <meshStandardMaterial 
+            color={darkerClothes} 
+            roughness={0.5}
+            metalness={0.2}
+          />
+        </mesh>
+        
+        {/* Neck */}
+        <mesh position={[0, 0.95, 0]} castShadow>
+          <cylinderGeometry args={[0.07, 0.07, 0.1, 16]} />
+          <meshStandardMaterial 
+            color={skinColor}
+            roughness={0.6}
+          />
+        </mesh>
+        
+        {/* Head - more realistic with face texture */}
+        <mesh ref={headRef} position={[0, 1.15, 0]} castShadow>
+          <sphereGeometry args={[0.25, 32, 32]} />
+          <meshStandardMaterial 
+            map={faceTexture}
+            color={skinColor}
+            roughness={0.6}
+          />
+        </mesh>
+        
+        {/* Eyes - using offset to make them more visible from the front */}
+        <mesh ref={leftEyeRef} position={[-0.09, 1.2, 0.2]} castShadow>
+          <sphereGeometry args={[0.05, 16, 16, 0, Math.PI * 2, 0, Math.PI]} />
+          <meshStandardMaterial 
+            map={eyeTexture}
+            roughness={0.3}
+          />
+        </mesh>
+        
+        <mesh ref={rightEyeRef} position={[0.09, 1.2, 0.2]} castShadow>
+          <sphereGeometry args={[0.05, 16, 16, 0, Math.PI * 2, 0, Math.PI]} />
+          <meshStandardMaterial 
+            map={eyeTexture}
+            roughness={0.3}
+          />
+        </mesh>
+        
+        {/* Pupils - moved forward for better visibility */}
+        <mesh ref={leftPupilRef} position={[-0.09, 1.2, 0.25]} castShadow>
+          <sphereGeometry args={[0.02, 16, 16]} />
+          <meshStandardMaterial 
+            color="black"
+            roughness={0.3}
+          />
+        </mesh>
+        
+        <mesh ref={rightPupilRef} position={[0.09, 1.2, 0.25]} castShadow>
+          <sphereGeometry args={[0.02, 16, 16]} />
+          <meshStandardMaterial 
+            color="black"
+            roughness={0.3}
+          />
+        </mesh>
+        
+        {/* Ears */}
+        <mesh ref={leftEarRef} position={[-0.25, 1.15, 0]} rotation={[0, -Math.PI/2, 0]} castShadow>
+          <sphereGeometry args={[0.06, 16, 16, 0, Math.PI, 0, Math.PI]} />
+          <meshStandardMaterial 
+            map={earTexture}
+            color={skinColor}
+            roughness={0.6}
+          />
+        </mesh>
+        
+        <mesh ref={rightEarRef} position={[0.25, 1.15, 0]} rotation={[0, Math.PI/2, 0]} castShadow>
+          <sphereGeometry args={[0.06, 16, 16, 0, Math.PI, 0, Math.PI]} />
+          <meshStandardMaterial 
+            map={earTexture}
+            color={skinColor}
+            roughness={0.6}
+          />
+        </mesh>
+        
+        {/* Mouth/Lips - moved forward for better visibility */}
+        <mesh ref={mouthRef} position={[0, 1.05, 0.24]} rotation={[Math.PI / 6, 0, 0]} castShadow>
+          <planeGeometry args={[0.15, 0.05]} />
+          <meshStandardMaterial 
+            map={lipsTexture}
+            transparent={true}
+            roughness={0.5}
+          />
+        </mesh>
+        
+        {/* Main hair */}
+        <mesh ref={hairTopRef} position={[0, 1.25, 0]} castShadow>
+          <sphereGeometry args={[0.27, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        {/* Hair bangs - moved forward */}
+        <mesh position={[0, 1.25, 0.18]} castShadow>
+          <boxGeometry args={[0.5, 0.25, 0.1]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        {/* Hair volume on sides */}
+        <mesh position={[-0.2, 1.15, 0]} castShadow>
+          <sphereGeometry args={[0.15, 16, 16]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        <mesh position={[0.2, 1.15, 0]} castShadow>
+          <sphereGeometry args={[0.15, 16, 16]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        {/* Hair strands */}
+        <mesh position={[-0.2, 0.8, 0]} castShadow>
+          <cylinderGeometry args={[0.03, 0.03, 0.6, 8]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        <mesh position={[0.2, 0.8, 0]} castShadow>
+          <cylinderGeometry args={[0.03, 0.03, 0.6, 8]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        {/* Enhanced arms - more realistic joints and shape */}
+        <group position={[-0.25, 0.8, 0]} rotation={[0, 0, Math.PI * 0.1]}>
+          {/* Upper arm */}
+          <mesh 
+            ref={leftArmRef} 
+            position={[0, -0.1, 0]} 
+            castShadow
+          >
+            <capsuleGeometry args={[0.05, 0.15, 8, 16]} />
+            <meshStandardMaterial color={clothesColor} roughness={0.6} />
+          </mesh>
+          
+          {/* Lower arm with joint connecting to upper arm */}
+          <mesh 
+            position={[0, -0.25, 0]} 
+            rotation={[0.2, 0, 0]}
+            castShadow
+          >
+            <capsuleGeometry args={[0.04, 0.15, 8, 16]} />
+            <meshStandardMaterial color={clothesColor} roughness={0.6} />
+          </mesh>
+          
+          {/* Hand */}
+          <mesh position={[0, -0.4, 0.05]} castShadow>
+            <sphereGeometry args={[0.06, 16, 16]} />
+            <meshStandardMaterial color={skinColor} roughness={0.7} />
+          </mesh>
+          
+          {/* Thumb */}
+          <mesh position={[-0.03, -0.4, 0.08]} rotation={[0.3, -0.3, 0.5]} castShadow>
+            <capsuleGeometry args={[0.015, 0.04, 8, 8]} />
+            <meshStandardMaterial color={skinColor} roughness={0.7} />
+          </mesh>
+          
+          {/* Fingers */}
+          <mesh position={[0, -0.46, 0.06]} rotation={[0.5, 0, 0]} castShadow>
+            <capsuleGeometry args={[0.015, 0.05, 8, 8]} />
+            <meshStandardMaterial color={skinColor} roughness={0.7} />
+          </mesh>
+        </group>
+        
+        {/* Right arm with similar enhancements */}
+        <group position={[0.25, 0.8, 0]} rotation={[0, 0, -Math.PI * 0.1]}>
+          {/* Upper arm */}
+          <mesh 
+            ref={rightArmRef} 
+            position={[0, -0.1, 0]} 
+            castShadow
+          >
+            <capsuleGeometry args={[0.05, 0.15, 8, 16]} />
+            <meshStandardMaterial color={clothesColor} roughness={0.6} />
+          </mesh>
+          
+          {/* Lower arm with joint connecting to upper arm */}
+          <mesh 
+            position={[0, -0.25, 0]} 
+            rotation={[0.2, 0, 0]}
+            castShadow
+          >
+            <capsuleGeometry args={[0.04, 0.15, 8, 16]} />
+            <meshStandardMaterial color={clothesColor} roughness={0.6} />
+          </mesh>
+          
+          {/* Hand */}
+          <mesh position={[0, -0.4, 0.05]} castShadow>
+            <sphereGeometry args={[0.06, 16, 16]} />
+            <meshStandardMaterial color={skinColor} roughness={0.7} />
+          </mesh>
+          
+          {/* Thumb */}
+          <mesh position={[0.03, -0.4, 0.08]} rotation={[0.3, 0.3, -0.5]} castShadow>
+            <capsuleGeometry args={[0.015, 0.04, 8, 8]} />
+            <meshStandardMaterial color={skinColor} roughness={0.7} />
+          </mesh>
+          
+          {/* Fingers */}
+          <mesh position={[0, -0.46, 0.06]} rotation={[0.5, 0, 0]} castShadow>
+            <capsuleGeometry args={[0.015, 0.05, 8, 8]} />
+            <meshStandardMaterial color={skinColor} roughness={0.7} />
+          </mesh>
+        </group>
+        
+        {/* Legs - more realistic with proper joints */}
         <mesh 
-          ref={leftArmRef} 
-          position={[0, -0.1, 0]} 
+          ref={leftLegRef} 
+          position={[-0.12, 0.25, 0]} 
           castShadow
         >
-          <capsuleGeometry args={[0.05, 0.15, 8, 16]} />
-          <meshStandardMaterial color={clothesColor} roughness={0.6} />
+          <capsuleGeometry args={[0.06, 0.3, 8, 16]} />
+          <meshStandardMaterial color={jeansColor} roughness={0.7} />
         </mesh>
         
-        {/* Lower arm with joint connecting to upper arm */}
         <mesh 
-          position={[0, -0.25, 0]} 
-          rotation={[0.2, 0, 0]}
+          ref={rightLegRef} 
+          position={[0.12, 0.25, 0]} 
           castShadow
         >
-          <capsuleGeometry args={[0.04, 0.15, 8, 16]} />
-          <meshStandardMaterial color={clothesColor} roughness={0.6} />
+          <capsuleGeometry args={[0.06, 0.3, 8, 16]} />
+          <meshStandardMaterial color={jeansColor} roughness={0.7} />
         </mesh>
         
-        {/* Hand */}
-        <mesh position={[0, -0.4, 0.05]} castShadow>
-          <sphereGeometry args={[0.06, 16, 16]} />
-          <meshStandardMaterial color={skinColor} roughness={0.7} />
+        {/* Feet with more detail */}
+        <mesh position={[-0.12, 0.05, 0.07]} castShadow>
+          <boxGeometry args={[0.08, 0.05, 0.15]} />
+          <meshStandardMaterial color="#000000" roughness={0.7} />
         </mesh>
         
-        {/* Thumb */}
-        <mesh position={[-0.03, -0.4, 0.08]} rotation={[0.3, -0.3, 0.5]} castShadow>
-          <capsuleGeometry args={[0.015, 0.04, 8, 8]} />
-          <meshStandardMaterial color={skinColor} roughness={0.7} />
+        <mesh position={[0.12, 0.05, 0.07]} castShadow>
+          <boxGeometry args={[0.08, 0.05, 0.15]} />
+          <meshStandardMaterial color="#000000" roughness={0.7} />
         </mesh>
         
-        {/* Fingers */}
-        <mesh position={[0, -0.46, 0.06]} rotation={[0.5, 0, 0]} castShadow>
-          <capsuleGeometry args={[0.015, 0.05, 8, 8]} />
-          <meshStandardMaterial color={skinColor} roughness={0.7} />
+        {/* Shoe details */}
+        <mesh position={[-0.12, 0.08, 0.13]} castShadow>
+          <boxGeometry args={[0.08, 0.02, 0.03]} />
+          <meshStandardMaterial color="#333333" roughness={0.5} metalness={0.2} />
         </mesh>
+        
+        <mesh position={[0.12, 0.08, 0.13]} castShadow>
+          <boxGeometry args={[0.08, 0.02, 0.03]} />
+          <meshStandardMaterial color="#333333" roughness={0.5} metalness={0.2} />
+        </mesh>
+        
+        {/* Character subtle glow */}
+        <pointLight 
+          position={[0, 0.8, 0]} 
+          intensity={0.7} 
+          color="#9B87F5" 
+          distance={1.8}
+          decay={2}
+        />
       </group>
-      
-      {/* Right arm with similar enhancements */}
-      <group position={[0.25, 0.8, 0]} rotation={[0, 0, -Math.PI * 0.1]}>
-        {/* Upper arm */}
-        <mesh 
-          ref={rightArmRef} 
-          position={[0, -0.1, 0]} 
-          castShadow
-        >
-          <capsuleGeometry args={[0.05, 0.15, 8, 16]} />
-          <meshStandardMaterial color={clothesColor} roughness={0.6} />
-        </mesh>
-        
-        {/* Lower arm with joint connecting to upper arm */}
-        <mesh 
-          position={[0, -0.25, 0]} 
-          rotation={[0.2, 0, 0]}
-          castShadow
-        >
-          <capsuleGeometry args={[0.04, 0.15, 8, 16]} />
-          <meshStandardMaterial color={clothesColor} roughness={0.6} />
-        </mesh>
-        
-        {/* Hand */}
-        <mesh position={[0, -0.4, 0.05]} castShadow>
-          <sphereGeometry args={[0.06, 16, 16]} />
-          <meshStandardMaterial color={skinColor} roughness={0.7} />
-        </mesh>
-        
-        {/* Thumb */}
-        <mesh position={[0.03, -0.4, 0.08]} rotation={[0.3, 0.3, -0.5]} castShadow>
-          <capsuleGeometry args={[0.015, 0.04, 8, 8]} />
-          <meshStandardMaterial color={skinColor} roughness={0.7} />
-        </mesh>
-        
-        {/* Fingers */}
-        <mesh position={[0, -0.46, 0.06]} rotation={[0.5, 0, 0]} castShadow>
-          <capsuleGeometry args={[0.015, 0.05, 8, 8]} />
-          <meshStandardMaterial color={skinColor} roughness={0.7} />
-        </mesh>
-      </group>
-      
-      {/* Legs - more realistic with proper joints */}
-      <mesh 
-        ref={leftLegRef} 
-        position={[-0.12, 0.25, 0]} 
-        castShadow
-      >
-        <capsuleGeometry args={[0.06, 0.3, 8, 16]} />
-        <meshStandardMaterial color={jeansColor} roughness={0.7} />
-      </mesh>
-      
-      <mesh 
-        ref={rightLegRef} 
-        position={[0.12, 0.25, 0]} 
-        castShadow
-      >
-        <capsuleGeometry args={[0.06, 0.3, 8, 16]} />
-        <meshStandardMaterial color={jeansColor} roughness={0.7} />
-      </mesh>
-      
-      {/* Feet with more detail */}
-      <mesh position={[-0.12, 0.05, 0.07]} castShadow>
-        <boxGeometry args={[0.08, 0.05, 0.15]} />
-        <meshStandardMaterial color="#000000" roughness={0.7} />
-      </mesh>
-      
-      <mesh position={[0.12, 0.05, 0.07]} castShadow>
-        <boxGeometry args={[0.08, 0.05, 0.15]} />
-        <meshStandardMaterial color="#000000" roughness={0.7} />
-      </mesh>
-      
-      {/* Shoe details */}
-      <mesh position={[-0.12, 0.08, 0.13]} castShadow>
-        <boxGeometry args={[0.08, 0.02, 0.03]} />
-        <meshStandardMaterial color="#333333" roughness={0.5} metalness={0.2} />
-      </mesh>
-      
-      <mesh position={[0.12, 0.08, 0.13]} castShadow>
-        <boxGeometry args={[0.08, 0.02, 0.03]} />
-        <meshStandardMaterial color="#333333" roughness={0.5} metalness={0.2} />
-      </mesh>
-      
-      {/* Character subtle glow */}
-      <pointLight 
-        position={[0, 0.8, 0]} 
-        intensity={0.7} 
-        color="#9B87F5" 
-        distance={1.8}
-        decay={2}
-      />
     </group>
   );
 };

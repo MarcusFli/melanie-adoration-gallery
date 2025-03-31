@@ -1,20 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
-import { Cat } from 'lucide-react';
+import { Cat, Music, FileText } from 'lucide-react';
 import MazeScene from './3D/MazeScene';
 import GameControls from './game/GameControls';
 import GameOverlays from './game/GameOverlays';
 import GameDialogs from './game/GameDialogs';
 import MusicUploader from './game/MusicUploader';
+import PDFViewer from './game/PDFViewer';
 import { useGameState } from '@/hooks/useGameState';
 import { useAudioManager } from '@/hooks/useAudioManager';
 import { useGameControls } from '@/hooks/useGameControls';
+import { Button } from './ui/button';
 
 const MelanieGame: React.FC = () => {
   // UI state
   const [showControls, setShowControls] = useState<boolean>(true);
   const [showAchievementDialog, setShowAchievementDialog] = useState<boolean>(false);
   const [showStory, setShowStory] = useState<boolean>(true);
+  const [showMusicUploader, setShowMusicUploader] = useState<boolean>(false);
+  const [showPDFUploader, setShowPDFUploader] = useState<boolean>(false);
+  const [showVictoryPDF, setShowVictoryPDF] = useState<boolean>(false);
   
   // Game hooks
   const { 
@@ -56,6 +61,13 @@ const MelanieGame: React.FC = () => {
     }
   }, [gameState.achievementUnlocked, showAchievementDialog]);
 
+  // Watch for game completion to show PDF
+  useEffect(() => {
+    if (gameState.gameCompleted) {
+      setShowVictoryPDF(true);
+    }
+  }, [gameState.gameCompleted]);
+
   // Set up keyboard event listeners
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -95,6 +107,29 @@ const MelanieGame: React.FC = () => {
             startGame={startGame}
           />
           
+          {/* Game option buttons */}
+          <div className="absolute top-4 right-4 z-30 flex gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="bg-black/70 backdrop-blur-sm border border-melanie-purple/50 shadow-lg hover:bg-melanie-purple/20 hover:border-melanie-purple"
+              onClick={() => setShowMusicUploader(true)}
+              title="Upload Music"
+            >
+              <Music className="h-5 w-5 text-melanie-purple" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="bg-black/70 backdrop-blur-sm border border-melanie-purple/50 shadow-lg hover:bg-melanie-purple/20 hover:border-melanie-purple"
+              onClick={() => setShowPDFUploader(true)}
+              title="Upload Victory PDF"
+            >
+              <FileText className="h-5 w-5 text-melanie-purple" />
+            </Button>
+          </div>
+          
           {/* 3D Maze render */}
           <div className="maze-container mb-4 h-96 overflow-hidden rounded-lg">
             <MazeScene 
@@ -104,15 +139,63 @@ const MelanieGame: React.FC = () => {
               isMoving={gameState.isMoving}
             />
           </div>
-          
-          {/* Music Uploader */}
-          <MusicUploader onSelectMusic={changeBackgroundMusic} />
         </div>
       </div>
 
+      {/* Music uploader dialog */}
+      {showMusicUploader && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-black/90 border border-melanie-purple/50 rounded-lg p-6 w-full max-w-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-white">Upload Game Music</h2>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowMusicUploader(false)}
+              >
+                <Cat className="h-5 w-5 text-gray-400" />
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-gray-300 mb-4">
+                Upload your own music to play while exploring the maze. Supported formats: MP3, WAV.
+              </p>
+            </div>
+            
+            <MusicUploader 
+              onSelectMusic={(url) => {
+                changeBackgroundMusic(url);
+                setShowMusicUploader(false);
+              }} 
+            />
+            
+            <div className="mt-6 flex justify-end">
+              <Button 
+                variant="outline"
+                className="border-melanie-purple/50 text-white hover:bg-melanie-purple/20"
+                onClick={() => setShowMusicUploader(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal dialogs */}
       <GameDialogs 
         showAchievementDialog={showAchievementDialog}
         setShowAchievementDialog={setShowAchievementDialog}
+      />
+      
+      {/* PDF Uploader */}
+      <PDFViewer 
+        isOpen={showPDFUploader || (showVictoryPDF && gameState.gameCompleted)} 
+        onClose={() => {
+          setShowPDFUploader(false);
+          setShowVictoryPDF(false);
+        }}
       />
       
       <style>

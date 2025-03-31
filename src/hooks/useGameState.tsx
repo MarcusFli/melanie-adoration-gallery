@@ -6,6 +6,7 @@ import { generateMaze } from '@/utils/mazeGenerator';
 // Game constants
 const INITIAL_MAZE_SIZE = 5;
 const MAX_MAZE_SIZE = 15;
+const MAX_LEVEL = 10;
 
 export interface GameState {
   level: number;
@@ -17,6 +18,7 @@ export interface GameState {
   playerPosition: { x: number; y: number };
   playerDirection: number; // 0: north, 1: east, 2: south, 3: west
   isMoving: boolean;
+  gameCompleted: boolean;
 }
 
 export function useGameState() {
@@ -27,6 +29,7 @@ export function useGameState() {
   const [won, setWon] = useState<boolean>(false);
   const [achievementUnlocked, setAchievementUnlocked] = useState<boolean>(false);
   const [isMoving, setIsMoving] = useState<boolean>(false);
+  const [gameCompleted, setGameCompleted] = useState<boolean>(false);
   
   // Maze state
   const [maze, setMaze] = useState(() => generateMaze(INITIAL_MAZE_SIZE, INITIAL_MAZE_SIZE, 1));
@@ -51,6 +54,7 @@ export function useGameState() {
     setGameOver(false);
     setWon(false);
     setAchievementUnlocked(false);
+    setGameCompleted(false);
     
     // Generate a new maze for level 1
     const newMaze = generateMaze(INITIAL_MAZE_SIZE, INITIAL_MAZE_SIZE, 1);
@@ -82,6 +86,18 @@ export function useGameState() {
     if (newX === maze.endPosition.x && newY === maze.endPosition.y) {
       setWon(true);
       playSound('win');
+      
+      // Check if player completed the final level
+      if (level === MAX_LEVEL) {
+        setGameCompleted(true);
+        toast({
+          title: "¡Felicidades!",
+          description: "¡Has completado todos los niveles y encontrado al gato de Melanie!",
+          variant: "default",
+          className: "bg-green-500 text-white"
+        });
+        return;
+      }
       
       toast({
         title: "¡Nivel completado!",
@@ -127,7 +143,8 @@ export function useGameState() {
       maze,
       playerPosition,
       playerDirection,
-      isMoving
+      isMoving,
+      gameCompleted
     },
     setAchievementUnlocked,
     setGameOver,
