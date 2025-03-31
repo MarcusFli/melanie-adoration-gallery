@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 
 export function useAudioManager() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [customMusicUrl, setCustomMusicUrl] = useState<string | null>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
   const effectsAudioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -45,15 +46,41 @@ export function useAudioManager() {
     }
   };
 
-  // Play soundtrack when game starts
+  // Change background music
+  const changeBackgroundMusic = (url: string) => {
+    if (backgroundAudioRef.current) {
+      const wasPlaying = !backgroundAudioRef.current.paused;
+      
+      // Pause current audio
+      backgroundAudioRef.current.pause();
+      
+      // Set new source
+      backgroundAudioRef.current.src = url;
+      setCustomMusicUrl(url);
+      
+      // Resume playback if it was playing
+      if (wasPlaying && soundEnabled) {
+        backgroundAudioRef.current.play().catch(err => {
+          console.error("Audio playback failed:", err);
+        });
+      }
+    }
+  };
+
+  // Play soundtrack when game starts or when customMusicUrl changes
   useEffect(() => {
     if (backgroundAudioRef.current && soundEnabled) {
+      // If we have custom music, use that instead of default
+      if (customMusicUrl && backgroundAudioRef.current.src !== customMusicUrl) {
+        backgroundAudioRef.current.src = customMusicUrl;
+      }
+      
       backgroundAudioRef.current.play().catch(err => {
         console.error("Audio playback failed:", err);
         setSoundEnabled(false);
       });
     }
-  }, [soundEnabled]);
+  }, [soundEnabled, customMusicUrl]);
 
   // Play sound effects
   const playSound = (type: 'move' | 'wall' | 'win' | 'lose') => {
@@ -90,6 +117,7 @@ export function useAudioManager() {
   return {
     soundEnabled,
     toggleSound,
-    playSound
+    playSound,
+    changeBackgroundMusic
   };
 }

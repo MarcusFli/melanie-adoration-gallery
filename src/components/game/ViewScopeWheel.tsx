@@ -1,26 +1,111 @@
 
-import React, { useState } from 'react';
-import { RotateCcw, Eye, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ZoomIn } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Eye, RotateCcw, ZoomIn } from 'lucide-react';
 
 interface ViewScopeWheelProps {
   onRotate: (direction: 'left' | 'right' | 'up' | 'down') => void;
 }
 
 const ViewScopeWheel: React.FC<ViewScopeWheelProps> = ({ onRotate }) => {
-  const [activeButton, setActiveButton] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [activeDirection, setActiveDirection] = useState<string | null>(null);
+  const wheelRef = useRef<HTMLDivElement>(null);
+  const centerX = useRef<number>(0);
+  const centerY = useRef<number>(0);
   
-  const handleButtonPress = (direction: 'left' | 'right' | 'up' | 'down') => {
-    setActiveButton(direction);
-    onRotate(direction);
+  // Initialize center point on mount
+  useEffect(() => {
+    if (wheelRef.current) {
+      const rect = wheelRef.current.getBoundingClientRect();
+      centerX.current = rect.width / 2;
+      centerY.current = rect.height / 2;
+    }
+  }, []);
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    handleMouseMove(e);
+  };
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    handleTouchMove(e);
+  };
+  
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setActiveDirection(null);
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !wheelRef.current) return;
     
-    // Reset active state after animation
-    setTimeout(() => setActiveButton(null), 200);
+    const rect = wheelRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    determineDirection(x, y);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !wheelRef.current) return;
+    
+    const touch = e.touches[0];
+    const rect = wheelRef.current.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    determineDirection(x, y);
+  };
+  
+  const determineDirection = (x: number, y: number) => {
+    // Calculate direction based on center point and current mouse/touch position
+    const deltaX = x - centerX.current;
+    const deltaY = y - centerY.current;
+    
+    // Determine which quadrant the cursor is in
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    
+    let direction: 'up' | 'down' | 'left' | 'right' | null = null;
+    
+    // Only trigger movement if a minimum distance is reached
+    const minDistance = 10;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    if (distance < minDistance) {
+      setActiveDirection(null);
+      return;
+    }
+    
+    if (absX > absY) {
+      // Horizontal movement dominates
+      direction = deltaX > 0 ? 'right' : 'left';
+    } else {
+      // Vertical movement dominates
+      direction = deltaY > 0 ? 'down' : 'up';
+    }
+    
+    if (direction !== activeDirection) {
+      setActiveDirection(direction);
+      onRotate(direction);
+    }
   };
   
   return (
     <div className="absolute bottom-6 right-6 z-10">
       <div className="bg-black/70 backdrop-blur-sm rounded-full p-2 border border-melanie-purple/50 shadow-lg shadow-melanie-purple/20">
-        <div className="relative flex items-center justify-center w-32 h-32">
+        <div 
+          ref={wheelRef}
+          className="relative flex items-center justify-center w-32 h-32 cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
+        >
           {/* Center icon with glowing effect */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative">
@@ -29,60 +114,29 @@ const ViewScopeWheel: React.FC<ViewScopeWheelProps> = ({ onRotate }) => {
             </div>
           </div>
           
-          {/* Up button */}
-          <button 
-            className={`absolute top-1 left-1/2 -translate-x-1/2 ${
-              activeButton === 'up' 
-                ? 'bg-melanie-purple text-white' 
-                : 'bg-black/50 hover:bg-melanie-purple/60'
-            } rounded-full p-2 transition-all duration-200 transform hover:scale-110 border border-melanie-purple/30`}
-            onClick={() => handleButtonPress('up')}
-          >
-            <ArrowUp className="w-6 h-6 text-white" />
-          </button>
+          {/* Direction indicators */}
+          <div className={`absolute top-4 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center ${activeDirection === 'up' ? 'bg-melanie-purple scale-125' : 'bg-black/50'} transition-all duration-200`}>
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
           
-          {/* Right button */}
-          <button 
-            className={`absolute right-1 top-1/2 -translate-y-1/2 ${
-              activeButton === 'right' 
-                ? 'bg-melanie-purple text-white' 
-                : 'bg-black/50 hover:bg-melanie-purple/60'
-            } rounded-full p-2 transition-all duration-200 transform hover:scale-110 border border-melanie-purple/30`}
-            onClick={() => handleButtonPress('right')}
-          >
-            <ArrowRight className="w-6 h-6 text-white" />
-          </button>
+          <div className={`absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center ${activeDirection === 'right' ? 'bg-melanie-purple scale-125' : 'bg-black/50'} transition-all duration-200`}>
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
           
-          {/* Down button */}
-          <button 
-            className={`absolute bottom-1 left-1/2 -translate-x-1/2 ${
-              activeButton === 'down' 
-                ? 'bg-melanie-purple text-white' 
-                : 'bg-black/50 hover:bg-melanie-purple/60'
-            } rounded-full p-2 transition-all duration-200 transform hover:scale-110 border border-melanie-purple/30`}
-            onClick={() => handleButtonPress('down')}
-          >
-            <ArrowDown className="w-6 h-6 text-white" />
-          </button>
+          <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center ${activeDirection === 'down' ? 'bg-melanie-purple scale-125' : 'bg-black/50'} transition-all duration-200`}>
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
           
-          {/* Left button */}
-          <button 
-            className={`absolute left-1 top-1/2 -translate-y-1/2 ${
-              activeButton === 'left' 
-                ? 'bg-melanie-purple text-white' 
-                : 'bg-black/50 hover:bg-melanie-purple/60'
-            } rounded-full p-2 transition-all duration-200 transform hover:scale-110 border border-melanie-purple/30`}
-            onClick={() => handleButtonPress('left')}
-          >
-            <ArrowLeft className="w-6 h-6 text-white" />
-          </button>
+          <div className={`absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center ${activeDirection === 'left' ? 'bg-melanie-purple scale-125' : 'bg-black/50'} transition-all duration-200`}>
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
           
           {/* Decorative elements */}
           <div className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)] rounded-full border border-melanie-purple/30 pointer-events-none"></div>
           
-          {/* Rotating connection lines */}
-          <div className="absolute inset-0 w-full h-full rounded-full border-2 border-dashed border-melanie-purple/40 animate-spin-slow pointer-events-none" style={{ animationDuration: '30s' }}></div>
-          <div className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)] rounded-full border border-dashed border-melanie-purple/20 animate-spin-slow pointer-events-none" style={{ animationDuration: '15s', animationDirection: 'reverse' }}></div>
+          {/* Interactive circular track */}
+          <div className={`absolute inset-0 w-full h-full rounded-full border-2 border-dashed border-melanie-purple/40 animate-spin-slow pointer-events-none ${isDragging ? 'border-melanie-purple animate-spin-fast' : ''}`} style={{ animationDuration: isDragging ? '15s' : '30s' }}></div>
+          <div className={`absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)] rounded-full border border-dashed border-melanie-purple/20 animate-spin-slow pointer-events-none ${isDragging ? 'border-melanie-purple/60 animate-spin-fast' : ''}`} style={{ animationDuration: isDragging ? '10s' : '15s', animationDirection: 'reverse' }}></div>
         </div>
         
         <div className="mt-2 text-xs text-center text-white">

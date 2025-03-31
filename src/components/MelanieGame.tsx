@@ -5,6 +5,7 @@ import MazeScene from './3D/MazeScene';
 import GameControls from './game/GameControls';
 import GameOverlays from './game/GameOverlays';
 import GameDialogs from './game/GameDialogs';
+import MusicUploader from './game/MusicUploader';
 import { useGameState } from '@/hooks/useGameState';
 import { useAudioManager } from '@/hooks/useAudioManager';
 import { useGameControls } from '@/hooks/useGameControls';
@@ -28,7 +29,8 @@ const MelanieGame: React.FC = () => {
   const { 
     soundEnabled, 
     toggleSound, 
-    playSound 
+    playSound,
+    changeBackgroundMusic
   } = useAudioManager();
   
   const { 
@@ -102,6 +104,9 @@ const MelanieGame: React.FC = () => {
               isMoving={gameState.isMoving}
             />
           </div>
+          
+          {/* Music Uploader */}
+          <MusicUploader onSelectMusic={changeBackgroundMusic} />
         </div>
       </div>
 
@@ -115,6 +120,16 @@ const MelanieGame: React.FC = () => {
           @keyframes ghost-float {
             0% { transform: translateY(0px); }
             100% { transform: translateY(-5px); }
+          }
+          
+          @keyframes spin-slow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          
+          @keyframes spin-fast {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
         `}
       </style>
