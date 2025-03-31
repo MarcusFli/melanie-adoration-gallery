@@ -32,6 +32,7 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         'melanie-purple': "#9B87F5",
+        'melanie-purple-dark': "#3A2D6F", // Added the dark purple color variant
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -59,6 +60,9 @@ const config = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        melanie: {
+          heart: "#FF6B9D", // Added this color for the heart-path utility class
         },
       },
       borderRadius: {
