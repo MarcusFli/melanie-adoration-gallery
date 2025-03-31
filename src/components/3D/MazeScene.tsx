@@ -18,14 +18,17 @@ interface MazeSceneProps {
   isMoving: boolean;
 }
 
-const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection, isMoving }) => {
+interface SceneProps extends MazeSceneProps {
+  cameraOffset: { x: number; y: number; z: number };
+  cameraLookOffset: { x: number; y: number; z: number };
+}
+
+const Scene: React.FC<SceneProps> = ({ maze, playerPosition, playerDirection, isMoving, cameraOffset, cameraLookOffset }) => {
   const { grid, width, height, endPosition } = maze;
   const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   const pointLightRef = useRef<THREE.PointLight>(null);
   
   const { camera } = useThree();
-  const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 2.5, z: 2.5 });
-  const [cameraLookOffset, setLookOffset] = useState({ x: 0, y: 0.5, z: 0 });
   
   // Update camera to follow player
   useEffect(() => {
@@ -182,33 +185,63 @@ const MazeScene: React.FC<MazeSceneProps> = (props) => {
   
   // Handle viewport rotation from the wheel
   const handleViewRotate = (direction: 'left' | 'right' | 'up' | 'down') => {
-    switch (direction) {
-      case 'up':
-        setCameraOffset(prev => ({ 
-          ...prev, 
-          y: Math.min(prev.y + 0.5, 8), 
-          z: Math.max(prev.z - 0.5, 0.5) 
-        }));
-        break;
-      case 'down':
-        setCameraOffset(prev => ({ 
-          ...prev, 
-          y: Math.max(prev.y - 0.5, 0.5), 
-          z: Math.min(prev.z + 0.5, 6) 
-        }));
-        break;
-      case 'left':
-        setCameraOffset(prev => ({ 
-          ...prev, 
-          x: prev.x - 0.5 
-        }));
-        break;
-      case 'right':
-        setCameraOffset(prev => ({ 
-          ...prev, 
-          x: prev.x + 0.5 
-        }));
-        break;
+    if (viewMode === 'follow' || viewMode === 'first-person') {
+      switch (direction) {
+        case 'up':
+          setCameraOffset(prev => ({ 
+            ...prev, 
+            y: Math.min(prev.y + 0.5, 8), 
+            z: Math.max(prev.z - 0.5, 0.5) 
+          }));
+          break;
+        case 'down':
+          setCameraOffset(prev => ({ 
+            ...prev, 
+            y: Math.max(prev.y - 0.5, 0.5), 
+            z: Math.min(prev.z + 0.5, 6) 
+          }));
+          break;
+        case 'left':
+          setCameraOffset(prev => ({ 
+            ...prev, 
+            x: prev.x - 0.5 
+          }));
+          break;
+        case 'right':
+          setCameraOffset(prev => ({ 
+            ...prev, 
+            x: prev.x + 0.5 
+          }));
+          break;
+      }
+    } else if (viewMode === 'top') {
+      // For top view, handle differently
+      switch (direction) {
+        case 'up':
+          setCameraOffset(prev => ({ 
+            ...prev,
+            y: Math.min(prev.y + 1, 15)
+          }));
+          break;
+        case 'down':
+          setCameraOffset(prev => ({ 
+            ...prev,
+            y: Math.max(prev.y - 1, 4)
+          }));
+          break;
+        case 'left':
+          setCameraOffset(prev => ({ 
+            ...prev, 
+            x: prev.x - 1
+          }));
+          break;
+        case 'right':
+          setCameraOffset(prev => ({ 
+            ...prev, 
+            x: prev.x + 1
+          }));
+          break;
+      }
     }
   };
   
@@ -226,8 +259,8 @@ const MazeScene: React.FC<MazeSceneProps> = (props) => {
         setLookOffset({ x: 0, y: 0, z: 0 });
         break;
       case 'first-person':
-        setCameraOffset({ x: 0, y: 0.5, z: 0 });
-        setLookOffset({ x: 0, y: 0.5, z: -1 });
+        setCameraOffset({ x: 0, y: 0.7, z: 0 });
+        setLookOffset({ x: 0, y: 0.7, z: -1 });
         break;
     }
   };
@@ -247,33 +280,39 @@ const MazeScene: React.FC<MazeSceneProps> = (props) => {
         dpr={[1, 2]} // Limit pixel ratio for better performance
       >
         <Scene 
-          {...props} 
+          {...props}
           cameraOffset={cameraOffset}
           cameraLookOffset={cameraLookOffset}
         />
         <OrbitControls enabled={false} />
       </Canvas>
       
-      {/* View mode buttons */}
+      {/* View mode buttons with improved styling */}
       <div className="absolute top-2 left-2 z-10 flex gap-2">
         <button 
-          className={`px-2 py-1 text-xs rounded ${viewMode === 'follow' ? 'bg-melanie-purple text-white' : 'bg-black/30 text-gray-200'}`}
+          className={`px-2 py-1 text-xs rounded-lg font-semibold border ${viewMode === 'follow' ? 'bg-melanie-purple border-white text-white' : 'bg-black/50 border-melanie-purple/30 text-gray-200 hover:bg-melanie-purple/30'}`}
           onClick={() => changeViewMode('follow')}
         >
           Follow
         </button>
         <button 
-          className={`px-2 py-1 text-xs rounded ${viewMode === 'top' ? 'bg-melanie-purple text-white' : 'bg-black/30 text-gray-200'}`}
+          className={`px-2 py-1 text-xs rounded-lg font-semibold border ${viewMode === 'top' ? 'bg-melanie-purple border-white text-white' : 'bg-black/50 border-melanie-purple/30 text-gray-200 hover:bg-melanie-purple/30'}`}
           onClick={() => changeViewMode('top')}
         >
           Top View
         </button>
         <button 
-          className={`px-2 py-1 text-xs rounded ${viewMode === 'first-person' ? 'bg-melanie-purple text-white' : 'bg-black/30 text-gray-200'}`}
+          className={`px-2 py-1 text-xs rounded-lg font-semibold border ${viewMode === 'first-person' ? 'bg-melanie-purple border-white text-white' : 'bg-black/50 border-melanie-purple/30 text-gray-200 hover:bg-melanie-purple/30'}`}
           onClick={() => changeViewMode('first-person')}
         >
           First Person
         </button>
+      </div>
+      
+      {/* Instructions */}
+      <div className="absolute top-2 right-2 z-10 bg-black/50 text-white text-xs p-2 rounded-lg border border-melanie-purple/30">
+        <p className="mb-1"><span className="text-melanie-purple font-bold">Arrow Keys:</span> Move & Rotate</p>
+        <p><span className="text-melanie-purple font-bold">3D Scope:</span> Adjust Camera</p>
       </div>
       
       {/* 3D Scope wheel */}
