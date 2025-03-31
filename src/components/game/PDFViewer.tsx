@@ -1,17 +1,31 @@
 
-import React, { useState } from 'react';
-import { FileText, Upload, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileText, Upload, X, Maximize, Minimize, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 
 interface PDFViewerProps {
   isOpen: boolean;
   onClose: () => void;
+  isGameCompleted?: boolean;
 }
 
-export function PDFViewer({ isOpen, onClose }: PDFViewerProps) {
+export function PDFViewer({ isOpen, onClose, isGameCompleted = false }: PDFViewerProps) {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfName, setPdfName] = useState<string>('');
+  const [zoom, setZoom] = useState<number>(1);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Load saved PDF from localStorage when component mounts
+  useEffect(() => {
+    const savedPdfUrl = localStorage.getItem('gameVictoryPdfUrl');
+    const savedPdfName = localStorage.getItem('gameVictoryPdfName');
+    
+    if (savedPdfUrl) {
+      setPdfUrl(savedPdfUrl);
+      setPdfName(savedPdfName || 'Victory.pdf');
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -32,24 +46,82 @@ export function PDFViewer({ isOpen, onClose }: PDFViewerProps) {
     setPdfUrl(url);
     setPdfName(file.name);
     
+    // Save PDF to localStorage for persistence
+    localStorage.setItem('gameVictoryPdfUrl', url);
+    localStorage.setItem('gameVictoryPdfName', file.name);
+    
     toast({
       title: "PDF uploaded",
       description: `"${file.name}" will be shown when you win the game`,
     });
   };
 
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.25, 0.5));
+  };
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-black/90 border border-melanie-purple/50 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm ${isFullscreen ? 'p-0' : 'p-4'}`}>
+      <div className={`bg-black/90 border border-melanie-purple/50 rounded-lg p-6 flex flex-col ${isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-4xl max-h-[90vh]'}`}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-white">
-            {pdfUrl ? "Victory PDF" : "Upload Victory PDF"}
+            {isGameCompleted && pdfUrl 
+              ? "¡Congratulations! Here's your reward" 
+              : pdfUrl 
+                ? "Victory PDF" 
+                : "Upload Victory PDF"}
           </h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5 text-gray-400" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {pdfUrl && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="border-melanie-purple/30 text-white"
+                  onClick={handleZoomOut}
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <span className="text-white mx-1">{Math.round(zoom * 100)}%</span>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="border-melanie-purple/30 text-white"
+                  onClick={handleZoomIn}
+                  title="Zoom In"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="border-melanie-purple/30 text-white"
+                  onClick={toggleFullscreen}
+                  title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                >
+                  {isFullscreen ? (
+                    <Minimize className="h-4 w-4" />
+                  ) : (
+                    <Maximize className="h-4 w-4" />
+                  )}
+                </Button>
+              </>
+            )}
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-5 w-5 text-gray-400" />
+            </Button>
+          </div>
         </div>
 
         {pdfUrl ? (
@@ -59,24 +131,39 @@ export function PDFViewer({ isOpen, onClose }: PDFViewerProps) {
                 <FileText className="h-5 w-5 text-melanie-purple mr-2" />
                 <span className="text-white">{pdfName}</span>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs border-melanie-purple/50 text-white"
-                onClick={() => {
-                  setPdfUrl(null);
-                  setPdfName('');
+              {!isGameCompleted && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs border-melanie-purple/50 text-white"
+                  onClick={() => {
+                    setPdfUrl(null);
+                    setPdfName('');
+                    localStorage.removeItem('gameVictoryPdfUrl');
+                    localStorage.removeItem('gameVictoryPdfName');
+                  }}
+                >
+                  Change PDF
+                </Button>
+              )}
+            </div>
+            <div className="flex-1 bg-white rounded-lg overflow-auto">
+              <div 
+                className="w-full h-full" 
+                style={{ 
+                  overflow: 'auto',
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'top left',
+                  height: `${100 / zoom}%`,
+                  width: `${100 / zoom}%`,
                 }}
               >
-                Change PDF
-              </Button>
-            </div>
-            <div className="flex-1 bg-white rounded-lg overflow-hidden">
-              <iframe 
-                src={`${pdfUrl}#toolbar=0`} 
-                className="w-full h-full" 
-                title="PDF Viewer"
-              />
+                <iframe 
+                  src={`${pdfUrl}#toolbar=0`} 
+                  className="w-full h-full border-0" 
+                  title="PDF Viewer"
+                />
+              </div>
             </div>
           </div>
         ) : (

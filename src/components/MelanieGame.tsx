@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Cat, Music, FileText } from 'lucide-react';
+import { FileText, Music, ZoomIn, ZoomOut } from 'lucide-react';
 import MazeScene from './3D/MazeScene';
 import GameControls from './game/GameControls';
 import GameOverlays from './game/GameOverlays';
@@ -139,6 +139,9 @@ const MelanieGame: React.FC = () => {
               isMoving={gameState.isMoving}
             />
           </div>
+          
+          {/* Music Uploader */}
+          <MusicUploader onSelectMusic={changeBackgroundMusic} />
         </div>
       </div>
 
@@ -153,7 +156,7 @@ const MelanieGame: React.FC = () => {
                 size="icon" 
                 onClick={() => setShowMusicUploader(false)}
               >
-                <Cat className="h-5 w-5 text-gray-400" />
+                <FileText className="h-5 w-5 text-gray-400" />
               </Button>
             </div>
             
@@ -196,6 +199,7 @@ const MelanieGame: React.FC = () => {
           setShowPDFUploader(false);
           setShowVictoryPDF(false);
         }}
+        isGameCompleted={gameState.gameCompleted}
       />
       
       <style>

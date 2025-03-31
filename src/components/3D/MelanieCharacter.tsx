@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -24,12 +25,17 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   const leftEarRef = useRef<THREE.Mesh>(null);
   const rightEarRef = useRef<THREE.Mesh>(null);
   const mouthRef = useRef<THREE.Mesh>(null);
+  const noseRef = useRef<THREE.Mesh>(null);
   const leftPupilRef = useRef<THREE.Mesh>(null);
   const rightPupilRef = useRef<THREE.Mesh>(null);
   
   // Clothing refs
   const dressRef = useRef<THREE.Mesh>(null);
   const hairTopRef = useRef<THREE.Mesh>(null);
+  
+  // Color change for lights
+  const [lightColor, setLightColor] = useState(new THREE.Color('#9B87F5'));
+  const lightChangeTimeRef = useRef(0);
   
   // Enhanced character colors
   const skinColor = new THREE.Color('#f8d8c8');    // Skin tone
@@ -57,6 +63,49 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   
   // Create ear texture
   const [earTexture] = useState(() => new THREE.CanvasTexture(createEarTexture()));
+  
+  // Create nose texture
+  const [noseTexture] = useState(() => new THREE.CanvasTexture(createNoseTexture()));
+  
+  function createNoseTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      // Base nose color
+      context.fillStyle = '#f0c5b5';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Create nostril shapes
+      context.fillStyle = '#d5a598';
+      context.beginPath();
+      context.arc(42, 85, 12, 0, Math.PI * 2);
+      context.arc(86, 85, 12, 0, Math.PI * 2);
+      context.fill();
+      
+      // Create nostril shadows
+      context.fillStyle = '#b58577';
+      context.beginPath();
+      context.arc(42, 85, 6, 0, Math.PI * 2);
+      context.arc(86, 85, 6, 0, Math.PI * 2);
+      context.fill();
+      
+      // Create bridge shadow
+      const gradient = context.createLinearGradient(64, 20, 64, 60);
+      gradient.addColorStop(0, 'rgba(213, 165, 152, 0.2)');
+      gradient.addColorStop(1, 'rgba(213, 165, 152, 0.6)');
+      context.fillStyle = gradient;
+      context.beginPath();
+      context.moveTo(44, 20);
+      context.quadraticCurveTo(64, 10, 84, 20);
+      context.quadraticCurveTo(64, 60, 44, 20);
+      context.fill();
+    }
+    
+    return canvas;
+  }
   
   function createEarTexture() {
     const canvas = document.createElement('canvas');
@@ -119,23 +168,30 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
       context.ellipse(352, 240, 50, 40, 0, 0, Math.PI * 2);
       context.fill();
       
-      // Add eyebrows with gradient
+      // Add more defined cheek bones
+      context.fillStyle = 'rgba(240, 150, 150, 0.1)';
+      context.beginPath();
+      context.ellipse(160, 220, 60, 50, 0, 0, Math.PI * 2);
+      context.ellipse(352, 220, 60, 50, 0, 0, Math.PI * 2);
+      context.fill();
+      
+      // Add eyebrows with gradient - make them more defined
       const eyebrowGradient = context.createLinearGradient(150, 160, 150, 180);
       eyebrowGradient.addColorStop(0, '#1a1a1a');
       eyebrowGradient.addColorStop(1, '#3a3a3a');
       context.fillStyle = eyebrowGradient;
       
-      // Left eyebrow
+      // Left eyebrow - curved and more defined
       context.beginPath();
       context.moveTo(130, 160);
-      context.bezierCurveTo(160, 150, 190, 160, 210, 170);
+      context.bezierCurveTo(160, 145, 190, 155, 210, 170);
       context.bezierCurveTo(190, 175, 160, 165, 130, 170);
       context.fill();
       
-      // Right eyebrow
+      // Right eyebrow - curved and more defined
       context.beginPath();
       context.moveTo(300, 160);
-      context.bezierCurveTo(330, 150, 360, 160, 380, 170);
+      context.bezierCurveTo(330, 145, 360, 155, 380, 170);
       context.bezierCurveTo(360, 175, 330, 165, 300, 170);
       context.fill();
       
@@ -149,6 +205,13 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         context.arc(x, y, radius, 0, Math.PI * 2);
         context.fill();
       }
+      
+      // Add contour to face for more shape
+      const contourGradient = context.createRadialGradient(256, 256, 200, 256, 256, 256);
+      contourGradient.addColorStop(0, 'rgba(0,0,0,0)');
+      contourGradient.addColorStop(1, 'rgba(210, 150, 120, 0.15)');
+      context.fillStyle = contourGradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
     }
     
     return canvas;
@@ -164,11 +227,11 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
       // Clear canvas
       context.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Create gradient for lips
+      // Create gradient for lips - enhance colors
       const lipGradient = context.createLinearGradient(0, 30, 0, 80);
-      lipGradient.addColorStop(0, '#d98c8c');
-      lipGradient.addColorStop(0.5, '#e3a6a6');
-      lipGradient.addColorStop(1, '#c27878');
+      lipGradient.addColorStop(0, '#e09595');   // Brighter top
+      lipGradient.addColorStop(0.5, '#e3a6a6'); // Middle
+      lipGradient.addColorStop(1, '#c27878');   // Darker bottom
       context.fillStyle = lipGradient;
       
       // Draw upper lip with more detail
@@ -179,24 +242,24 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
       context.bezierCurveTo(90, 50, 60, 40, 60, 40);
       context.fill();
       
-      // Draw cupid's bow
+      // Draw cupid's bow - more pronounced
       context.beginPath();
-      context.moveTo(120, 35);
-      context.quadraticCurveTo(128, 30, 136, 35);
+      context.moveTo(118, 35);
+      context.quadraticCurveTo(128, 28, 138, 35);
       context.strokeStyle = '#c27878';
       context.lineWidth = 2;
       context.stroke();
       
-      // Draw lower lip with more detail
+      // Draw lower lip with more detail - fuller
       context.beginPath();
       context.moveTo(60, 40);
-      context.bezierCurveTo(90, 70, 128, 85, 166, 70);
-      context.bezierCurveTo(196, 40, 166, 90, 128, 90);
-      context.bezierCurveTo(90, 90, 60, 40, 60, 40);
+      context.bezierCurveTo(90, 75, 128, 90, 166, 75);
+      context.bezierCurveTo(196, 40, 166, 95, 128, 95);
+      context.bezierCurveTo(90, 95, 60, 40, 60, 40);
       context.fillStyle = lipGradient;
       context.fill();
       
-      // Add lip shine and texture
+      // Add lip shine and texture - more natural
       context.fillStyle = 'rgba(255,255,255,0.3)';
       context.beginPath();
       context.ellipse(128, 45, 40, 10, 0, 0, Math.PI * 2);
@@ -205,12 +268,29 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
       // Add subtle lip lines
       context.strokeStyle = 'rgba(180,100,100,0.2)';
       context.lineWidth = 1;
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 10; i++) {
         context.beginPath();
-        context.moveTo(90 + i * 10, 50);
-        context.lineTo(90 + i * 10, 70);
+        context.moveTo(80 + i * 10, 50);
+        context.lineTo(80 + i * 10, 75);
         context.stroke();
       }
+      
+      // Add lip edge definition
+      context.strokeStyle = 'rgba(180,100,100,0.4)';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(60, 40);
+      context.bezierCurveTo(90, 30, 128, 25, 166, 30);
+      context.bezierCurveTo(196, 40, 166, 50, 128, 50);
+      context.bezierCurveTo(90, 50, 60, 40, 60, 40);
+      context.stroke();
+      
+      context.beginPath();
+      context.moveTo(60, 40);
+      context.bezierCurveTo(90, 75, 128, 90, 166, 75);
+      context.bezierCurveTo(196, 40, 166, 95, 128, 95);
+      context.bezierCurveTo(90, 95, 60, 40, 60, 40);
+      context.stroke();
     }
     
     return canvas;
@@ -229,45 +309,41 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
       context.ellipse(128, 128, 120, 120, 0, 0, Math.PI * 2);
       context.fill();
       
-      // Draw iris with gradient
+      // Add more realistic sclera texture with subtle veins
+      context.strokeStyle = 'rgba(255,100,100,0.05)';
+      context.lineWidth = 0.5;
+      for (let i = 0; i < 30; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const length = Math.random() * 80 + 40;
+        const startX = 128 + Math.cos(angle) * 70;
+        const startY = 128 + Math.sin(angle) * 70;
+        const endX = 128 + Math.cos(angle) * length;
+        const endY = 128 + Math.sin(angle) * length;
+        
+        context.beginPath();
+        context.moveTo(startX, startY);
+        context.lineTo(endX, endY);
+        context.stroke();
+      }
+      
+      // Draw iris with gradient - more detailed
       const irisGradient = context.createRadialGradient(128, 128, 0, 128, 128, 60);
-      irisGradient.addColorStop(0, '#7a5e38');
-      irisGradient.addColorStop(0.7, '#4a2c0a');
-      irisGradient.addColorStop(1, '#2a1600');
+      irisGradient.addColorStop(0, '#8c6e48');  // Lighter center
+      irisGradient.addColorStop(0.6, '#6a4c28'); // Mid tone
+      irisGradient.addColorStop(0.8, '#4a2c0a'); // Dark brown
+      irisGradient.addColorStop(1, '#2a1600');   // Almost black edge
       context.fillStyle = irisGradient;
       context.beginPath();
       context.ellipse(128, 128, 60, 60, 0, 0, Math.PI * 2);
       context.fill();
       
-      // Draw pupil
-      context.fillStyle = '#000000';
-      context.beginPath();
-      context.ellipse(128, 128, 25, 25, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      // Add eye shine with multiple highlights
-      context.fillStyle = 'rgba(255,255,255,0.9)';
-      context.beginPath();
-      context.ellipse(100, 100, 15, 15, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      context.fillStyle = 'rgba(255,255,255,0.5)';
-      context.beginPath();
-      context.ellipse(160, 110, 8, 8, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      context.fillStyle = 'rgba(255,255,255,0.3)';
-      context.beginPath();
-      context.ellipse(140, 150, 5, 5, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      // Add subtle iris detail
-      context.strokeStyle = 'rgba(0,0,0,0.3)';
+      // Add iris texture - starburst pattern
+      context.strokeStyle = 'rgba(80,50,0,0.3)';
       context.lineWidth = 0.5;
-      for (let i = 0; i < 12; i++) {
-        const angle = (i / 12) * Math.PI * 2;
-        const x1 = 128 + Math.cos(angle) * 30;
-        const y1 = 128 + Math.sin(angle) * 30;
+      for (let i = 0; i < 24; i++) {
+        const angle = (i / 24) * Math.PI * 2;
+        const x1 = 128 + Math.cos(angle) * 20;
+        const y1 = 128 + Math.sin(angle) * 20;
         const x2 = 128 + Math.cos(angle) * 60;
         const y2 = 128 + Math.sin(angle) * 60;
         
@@ -277,22 +353,38 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         context.stroke();
       }
       
-      // Add eye veins for realism
-      context.strokeStyle = 'rgba(255,100,100,0.1)';
-      context.lineWidth = 1;
-      for (let i = 0; i < 10; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const length = Math.random() * 60 + 60;
-        const startX = 128 + Math.cos(angle) * 60;
-        const startY = 128 + Math.sin(angle) * 60;
-        const endX = 128 + Math.cos(angle) * length;
-        const endY = 128 + Math.sin(angle) * length;
-        
-        context.beginPath();
-        context.moveTo(startX, startY);
-        context.lineTo(endX, endY);
-        context.stroke();
-      }
+      // Add iris ring - more definition
+      context.strokeStyle = '#1a0d00';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.arc(128, 128, 60, 0, Math.PI * 2);
+      context.stroke();
+      
+      // Draw pupil - softer edge
+      const pupilGradient = context.createRadialGradient(128, 128, 0, 128, 128, 28);
+      pupilGradient.addColorStop(0, '#000000');
+      pupilGradient.addColorStop(0.9, '#000000');
+      pupilGradient.addColorStop(1, 'rgba(0,0,0,0.9)');
+      context.fillStyle = pupilGradient;
+      context.beginPath();
+      context.ellipse(128, 128, 25, 25, 0, 0, Math.PI * 2);
+      context.fill();
+      
+      // Add multiple eye shine highlights for realism
+      context.fillStyle = 'rgba(255,255,255,0.9)';
+      context.beginPath();
+      context.ellipse(100, 100, 15, 15, 0, 0, Math.PI * 2);
+      context.fill();
+      
+      context.fillStyle = 'rgba(255,255,255,0.7)';
+      context.beginPath();
+      context.ellipse(150, 110, 8, 8, 0, 0, Math.PI * 2);
+      context.fill();
+      
+      context.fillStyle = 'rgba(255,255,255,0.4)';
+      context.beginPath();
+      context.ellipse(135, 140, 5, 5, 0, 0, Math.PI * 2);
+      context.fill();
     }
     
     return canvas;
@@ -421,7 +513,7 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   }
 
   // Animation logic
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (groupRef.current) {
       // Rotate character based on direction
       const targetRotation = direction * (Math.PI / 2);
@@ -430,6 +522,12 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         targetRotation,
         0.2
       );
+      
+      // Slow color change for character glow
+      lightChangeTimeRef.current += delta * 0.2; // Reduced from original speed for slower changes
+      const hue = (Math.sin(lightChangeTimeRef.current) + 1) / 2;
+      const color = new THREE.Color().setHSL(hue, 0.6, 0.6);
+      setLightColor(color);
       
       if (isMoving) {
         // Walking animation
@@ -626,6 +724,27 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
           />
         </mesh>
         
+        {/* Nose - more prominent */}
+        <mesh ref={noseRef} position={[0, 1.15, 0.22]} castShadow>
+          <coneGeometry args={[0.05, 0.1, 16, 1, true]} />
+          <meshStandardMaterial 
+            map={noseTexture}
+            color={skinColor}
+            roughness={0.7}
+          />
+        </mesh>
+        
+        {/* Nostrils */}
+        <mesh position={[-0.02, 1.12, 0.25]} castShadow>
+          <sphereGeometry args={[0.01, 8, 8]} />
+          <meshStandardMaterial color="#4d3a33" roughness={0.7} />
+        </mesh>
+        
+        <mesh position={[0.02, 1.12, 0.25]} castShadow>
+          <sphereGeometry args={[0.01, 8, 8]} />
+          <meshStandardMaterial color="#4d3a33" roughness={0.7} />
+        </mesh>
+        
         {/* Eyes - using offset to make them more visible from the front */}
         <mesh ref={leftEyeRef} position={[-0.09, 1.2, 0.2]} castShadow>
           <sphereGeometry args={[0.05, 16, 16, 0, Math.PI * 2, 0, Math.PI]} />
@@ -643,9 +762,20 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
           />
         </mesh>
         
+        {/* Eye whites - subtle shadow to create depth */}
+        <mesh position={[-0.09, 1.2, 0.19]} castShadow>
+          <ringGeometry args={[0.048, 0.05, 16, 1]} />
+          <meshStandardMaterial color="#e0e0e0" roughness={0.2} />
+        </mesh>
+        
+        <mesh position={[0.09, 1.2, 0.19]} castShadow>
+          <ringGeometry args={[0.048, 0.05, 16, 1]} />
+          <meshStandardMaterial color="#e0e0e0" roughness={0.2} />
+        </mesh>
+        
         {/* Pupils - moved forward for better visibility */}
         <mesh ref={leftPupilRef} position={[-0.09, 1.2, 0.25]} castShadow>
-          <sphereGeometry args={[0.02, 16, 16]} />
+          <sphereGeometry args={[0.025, 16, 16]} />
           <meshStandardMaterial 
             color="black"
             roughness={0.3}
@@ -653,11 +783,32 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         </mesh>
         
         <mesh ref={rightPupilRef} position={[0.09, 1.2, 0.25]} castShadow>
-          <sphereGeometry args={[0.02, 16, 16]} />
+          <sphereGeometry args={[0.025, 16, 16]} />
           <meshStandardMaterial 
             color="black"
             roughness={0.3}
           />
+        </mesh>
+        
+        {/* Eyelids - to make blinking more realistic */}
+        <mesh position={[-0.09, 1.23, 0.22]} castShadow>
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <meshStandardMaterial color={skinColor} roughness={0.6} />
+        </mesh>
+        
+        <mesh position={[0.09, 1.23, 0.22]} castShadow>
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <meshStandardMaterial color={skinColor} roughness={0.6} />
+        </mesh>
+        
+        <mesh position={[-0.09, 1.17, 0.22]} rotation={[Math.PI, 0, 0]} castShadow>
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <meshStandardMaterial color={skinColor} roughness={0.6} />
+        </mesh>
+        
+        <mesh position={[0.09, 1.17, 0.22]} rotation={[Math.PI, 0, 0]} castShadow>
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <meshStandardMaterial color={skinColor} roughness={0.6} />
         </mesh>
         
         {/* Ears */}
@@ -687,6 +838,12 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
             transparent={true}
             roughness={0.5}
           />
+        </mesh>
+        
+        {/* Lip detail - add volume */}
+        <mesh position={[0, 1.04, 0.24]} rotation={[Math.PI / 5, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.08, 0.08, 0.015, 16, 1, true]} />
+          <meshStandardMaterial color={lipsColor} roughness={0.5} />
         </mesh>
         
         {/* Main hair */}
@@ -870,11 +1027,11 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
           <meshStandardMaterial color="#333333" roughness={0.5} metalness={0.2} />
         </mesh>
         
-        {/* Character subtle glow */}
+        {/* Character subtle glow with slower color change */}
         <pointLight 
           position={[0, 0.8, 0]} 
           intensity={0.7} 
-          color="#9B87F5" 
+          color={lightColor} 
           distance={1.8}
           decay={2}
         />
