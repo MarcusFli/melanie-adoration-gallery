@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HeartCrack, Sparkles, Skull, Cat, RotateCcw } from 'lucide-react';
+import { HeartCrack, Sparkles, Skull, Cat, RotateCcw, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/hooks/useGameState';
 
@@ -55,6 +55,10 @@ const GameOverlays: React.FC<GameOverlaysProps> = ({
                 </li>
                 <li>
                   <span className="font-semibold">Flecha derecha:</span> Girar a la derecha
+                </li>
+                <li className="flex items-center mt-3 pt-2 border-t border-melanie-purple/30">
+                  <Eye className="w-4 h-4 mr-2 text-melanie-purple" />
+                  <span>Usa la rueda 3D en la esquina para cambiar la perspectiva de la cámara</span>
                 </li>
               </ul>
             </div>

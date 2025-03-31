@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,6 +9,7 @@ import MazeCeiling from './MazeCeiling';
 import MelanieCharacter from './MelanieCharacter';
 import CatModel from './CatModel';
 import { Maze } from '@/utils/mazeGenerator';
+import ViewScopeWheel from '../game/ViewScopeWheel';
 
 interface MazeSceneProps {
   maze: Maze;
@@ -23,40 +24,49 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
   const pointLightRef = useRef<THREE.PointLight>(null);
   
   const { camera } = useThree();
+  const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 2.5, z: 2.5 });
+  const [cameraLookOffset, setLookOffset] = useState({ x: 0, y: 0.5, z: 0 });
   
   // Update camera to follow player
   useEffect(() => {
     if (camera instanceof THREE.PerspectiveCamera) {
       camera.position.set(
-        playerPosition.x, 
-        1.5, 
-        playerPosition.y + 2.5
+        playerPosition.x + cameraOffset.x, 
+        cameraOffset.y, 
+        playerPosition.y + cameraOffset.z
       );
-      camera.lookAt(playerPosition.x, 0.5, playerPosition.y);
+      
+      // Look at the player's position plus any offset
+      camera.lookAt(
+        playerPosition.x + cameraLookOffset.x, 
+        cameraLookOffset.y, 
+        playerPosition.y + cameraLookOffset.z
+      );
       
       // Set optimized camera properties
       camera.near = 0.1;
       camera.far = 100;
       camera.updateProjectionMatrix();
     }
-  }, [camera, playerPosition]);
+  }, [camera, playerPosition, cameraOffset, cameraLookOffset]);
   
   useFrame(() => {
     if (camera instanceof THREE.PerspectiveCamera) {
       // Smoothly move camera to follow player
-      const targetX = playerPosition.x;
-      const targetY = 1.5; // Fixed height
-      const targetZ = playerPosition.y + 2.5; // Camera is behind the player
+      const targetX = playerPosition.x + cameraOffset.x;
+      const targetY = cameraOffset.y;
+      const targetZ = playerPosition.y + cameraOffset.z;
       
       camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetX, 0.1);
       camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, 0.1);
       camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, 0.1);
       
-      // Look at the player's position but slightly ahead
-      const lookAtX = playerPosition.x + Math.sin(playerDirection * (Math.PI / 2)) * 0.5;
-      const lookAtZ = playerPosition.y + Math.cos(playerDirection * (Math.PI / 2)) * 0.5;
+      // Look at the player's position but with offset
+      const lookAtX = playerPosition.x + cameraLookOffset.x;
+      const lookAtY = cameraLookOffset.y;
+      const lookAtZ = playerPosition.y + cameraLookOffset.z;
       
-      camera.lookAt(lookAtX, 0.5, lookAtZ);
+      camera.lookAt(lookAtX, lookAtY, lookAtZ);
     }
     
     if (pointLightRef.current) {
@@ -166,6 +176,62 @@ const Scene: React.FC<MazeSceneProps> = ({ maze, playerPosition, playerDirection
 };
 
 const MazeScene: React.FC<MazeSceneProps> = (props) => {
+  const [viewMode, setViewMode] = useState<'follow' | 'top' | 'first-person'>('follow');
+  const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 2.5, z: 2.5 });
+  const [cameraLookOffset, setLookOffset] = useState({ x: 0, y: 0.5, z: 0 });
+  
+  // Handle viewport rotation from the wheel
+  const handleViewRotate = (direction: 'left' | 'right' | 'up' | 'down') => {
+    switch (direction) {
+      case 'up':
+        setCameraOffset(prev => ({ 
+          ...prev, 
+          y: Math.min(prev.y + 0.5, 8), 
+          z: Math.max(prev.z - 0.5, 0.5) 
+        }));
+        break;
+      case 'down':
+        setCameraOffset(prev => ({ 
+          ...prev, 
+          y: Math.max(prev.y - 0.5, 0.5), 
+          z: Math.min(prev.z + 0.5, 6) 
+        }));
+        break;
+      case 'left':
+        setCameraOffset(prev => ({ 
+          ...prev, 
+          x: prev.x - 0.5 
+        }));
+        break;
+      case 'right':
+        setCameraOffset(prev => ({ 
+          ...prev, 
+          x: prev.x + 0.5 
+        }));
+        break;
+    }
+  };
+  
+  // Set different view modes
+  const changeViewMode = (mode: 'follow' | 'top' | 'first-person') => {
+    setViewMode(mode);
+    
+    switch (mode) {
+      case 'follow':
+        setCameraOffset({ x: 0, y: 2.5, z: 2.5 });
+        setLookOffset({ x: 0, y: 0.5, z: 0 });
+        break;
+      case 'top':
+        setCameraOffset({ x: 0, y: 8, z: 0 });
+        setLookOffset({ x: 0, y: 0, z: 0 });
+        break;
+      case 'first-person':
+        setCameraOffset({ x: 0, y: 0.5, z: 0 });
+        setLookOffset({ x: 0, y: 0.5, z: -1 });
+        break;
+    }
+  };
+  
   return (
     <div className="w-full h-96 relative">
       <Canvas 
@@ -180,9 +246,38 @@ const MazeScene: React.FC<MazeSceneProps> = (props) => {
         }}
         dpr={[1, 2]} // Limit pixel ratio for better performance
       >
-        <Scene {...props} />
+        <Scene 
+          {...props} 
+          cameraOffset={cameraOffset}
+          cameraLookOffset={cameraLookOffset}
+        />
         <OrbitControls enabled={false} />
       </Canvas>
+      
+      {/* View mode buttons */}
+      <div className="absolute top-2 left-2 z-10 flex gap-2">
+        <button 
+          className={`px-2 py-1 text-xs rounded ${viewMode === 'follow' ? 'bg-melanie-purple text-white' : 'bg-black/30 text-gray-200'}`}
+          onClick={() => changeViewMode('follow')}
+        >
+          Follow
+        </button>
+        <button 
+          className={`px-2 py-1 text-xs rounded ${viewMode === 'top' ? 'bg-melanie-purple text-white' : 'bg-black/30 text-gray-200'}`}
+          onClick={() => changeViewMode('top')}
+        >
+          Top View
+        </button>
+        <button 
+          className={`px-2 py-1 text-xs rounded ${viewMode === 'first-person' ? 'bg-melanie-purple text-white' : 'bg-black/30 text-gray-200'}`}
+          onClick={() => changeViewMode('first-person')}
+        >
+          First Person
+        </button>
+      </div>
+      
+      {/* 3D Scope wheel */}
+      <ViewScopeWheel onRotate={handleViewRotate} />
     </div>
   );
 };
