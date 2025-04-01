@@ -143,7 +143,6 @@ const createTattooTexture = () => {
     context.stroke();
   }
   const texture = new THREE.CanvasTexture(canvas);
-  texture.transparent = true;
   return texture;
 };
 
@@ -189,6 +188,81 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         <meshStandardMaterial map={clothingTexture} color="#9b87f5" />
       </mesh>
       
+      {/* Left Arm */}
+      <group position={[-0.25, 0.9, 0]}>
+        {/* Upper Arm */}
+        <mesh position={[0, -0.15, 0]} rotation={[0, 0, -0.3]}>
+          <capsuleGeometry args={[0.05, 0.3, 8, 16]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        
+        {/* Lower Arm */}
+        <mesh position={[-0.12, -0.3, 0]} rotation={[0, 0, -0.6]}>
+          <capsuleGeometry args={[0.04, 0.25, 8, 16]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        
+        {/* Hand */}
+        <mesh position={[-0.25, -0.4, 0]} rotation={[0, 0, -0.2]}>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        
+        {/* Fingers */}
+        <mesh position={[-0.29, -0.45, 0.02]} rotation={[0, 0, -0.5]}>
+          <capsuleGeometry args={[0.01, 0.06, 4, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        <mesh position={[-0.31, -0.42, 0]} rotation={[0, 0, -0.3]}>
+          <capsuleGeometry args={[0.01, 0.06, 4, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        <mesh position={[-0.32, -0.39, -0.02]} rotation={[0, 0, -0.1]}>
+          <capsuleGeometry args={[0.01, 0.06, 4, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+      </group>
+      
+      {/* Right Arm with Tattoo */}
+      <group position={[0.25, 0.9, 0]}>
+        {/* Upper Arm with Tattoo */}
+        <mesh position={[0, -0.15, 0]} rotation={[0, 0, 0.3]}>
+          <capsuleGeometry args={[0.05, 0.3, 8, 16]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        {/* Tattoo layer */}
+        <mesh position={[0, -0.15, 0]} rotation={[0, 0, 0.3]}>
+          <capsuleGeometry args={[0.052, 0.26, 8, 16]} />
+          <meshStandardMaterial map={tattooTexture} transparent opacity={0.85} />
+        </mesh>
+        
+        {/* Lower Arm */}
+        <mesh position={[0.12, -0.3, 0]} rotation={[0, 0, 0.6]}>
+          <capsuleGeometry args={[0.04, 0.25, 8, 16]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        
+        {/* Hand */}
+        <mesh position={[0.25, -0.4, 0]} rotation={[0, 0, 0.2]}>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        
+        {/* Fingers */}
+        <mesh position={[0.29, -0.45, 0.02]} rotation={[0, 0, 0.5]}>
+          <capsuleGeometry args={[0.01, 0.06, 4, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        <mesh position={[0.31, -0.42, 0]} rotation={[0, 0, 0.3]}>
+          <capsuleGeometry args={[0.01, 0.06, 4, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+        <mesh position={[0.32, -0.39, -0.02]} rotation={[0, 0, 0.1]}>
+          <capsuleGeometry args={[0.01, 0.06, 4, 8]} />
+          <meshStandardMaterial color="#c39f81" />
+        </mesh>
+      </group>
+      
       {/* Belly Button with Piercing */}
       <group position={[0, 0.7, 0.2]}>
         {/* Belly button */}
@@ -203,25 +277,16 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         </mesh>
       </group>
       
-      {/* Arm Tattoo (Right) */}
-      <mesh position={[0.25, 0.8, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <cylinderGeometry args={[0.08, 0.08, 0.5, 16]} />
-        <meshStandardMaterial color="#c39f81" />
-      </mesh>
-      <mesh position={[0.25, 0.8, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <cylinderGeometry args={[0.082, 0.082, 0.45, 16]} />
-        <meshStandardMaterial transparent={true} map={tattooTexture} opacity={0.85} />
-      </mesh>
-      
       {/* Head */}
       <mesh position={[0, 1.35, 0]}>
         <sphereGeometry args={[0.25, 32, 32]} />
         <meshStandardMaterial map={faceTexture} />
       </mesh>
 
-      {/* Back of Head Hair (covering the bald spot) */}
-      <mesh position={[0, 1.35, -0.15]}>
-        <sphereGeometry args={[0.27, 16, 16, 0, Math.PI, Math.PI/2, Math.PI]} />
+      {/* Complete Hair Coverage */}
+      {/* Back of Head Hair - Full coverage */}
+      <mesh position={[0, 1.35, 0]}>
+        <sphereGeometry args={[0.27, 32, 32, Math.PI/2, Math.PI, 0, Math.PI]} />
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
@@ -231,14 +296,20 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
-      {/* Side Hair (Left) */}
+      {/* Side Hair (Left) - More volume */}
       <mesh position={[-0.2, 1.35, 0]}>
-        <sphereGeometry args={[0.15, 16, 16]} />
+        <sphereGeometry args={[0.18, 16, 16]} />
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
-      {/* Side Hair (Right) */}
+      {/* Side Hair (Right) - More volume */}
       <mesh position={[0.2, 1.35, 0]}>
+        <sphereGeometry args={[0.18, 16, 16]} />
+        <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
+      </mesh>
+      
+      {/* Hair at nape of neck for complete coverage */}
+      <mesh position={[0, 1.2, -0.15]}>
         <sphereGeometry args={[0.15, 16, 16]} />
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
