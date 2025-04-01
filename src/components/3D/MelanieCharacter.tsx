@@ -27,7 +27,8 @@ const createNoseTexture = () => {
   canvas.height = 32;
   const context = canvas.getContext('2d');
   if (context) {
-    context.fillStyle = '#ffcdba';
+    // Warmer, olive-toned skin for Latina character
+    context.fillStyle = '#c39f81';
     context.fillRect(0, 0, 32, 32);
   }
   const texture = new THREE.CanvasTexture(canvas);
@@ -41,8 +42,8 @@ const createFaceTexture = () => {
   canvas.height = 128;
   const context = canvas.getContext('2d');
   if (context) {
-    // Lighter skin tone for face
-    context.fillStyle = '#ffdbcc';
+    // Warmer, olive-toned skin for Latina character
+    context.fillStyle = '#c39f81';
     context.fillRect(0, 0, 128, 128);
   }
   const texture = new THREE.CanvasTexture(canvas);
@@ -55,8 +56,8 @@ const createLipsTexture = () => {
   canvas.height = 16;
   const context = canvas.getContext('2d');
   if (context) {
-    // Pink-ish color for lips
-    context.fillStyle = '#ff9e9e';
+    // Deeper red for lips
+    context.fillStyle = '#c73030';
     context.fillRect(0, 0, 32, 16);
   }
   const texture = new THREE.CanvasTexture(canvas);
@@ -69,8 +70,8 @@ const createHairTexture = () => {
   canvas.height = 128;
   const context = canvas.getContext('2d');
   if (context) {
-    // Dark color for hair
-    context.fillStyle = '#120d0a';
+    // Darker black hair
+    context.fillStyle = '#0a0a0a';
     context.fillRect(0, 0, 128, 128);
   }
   const texture = new THREE.CanvasTexture(canvas);
@@ -97,10 +98,52 @@ const createEarTexture = () => {
   canvas.height = 32;
   const context = canvas.getContext('2d');
   if (context) {
-    context.fillStyle = '#ffdbcc';
+    // Warmer, olive-toned skin for Latina character
+    context.fillStyle = '#c39f81';
     context.fillRect(0, 0, 32, 32);
   }
   const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+};
+
+const createTattooTexture = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const context = canvas.getContext('2d');
+  if (context) {
+    // Base color (transparent)
+    context.clearRect(0, 0, 128, 128);
+    
+    // Add a tribal/floral pattern tattoo
+    context.strokeStyle = '#000000';
+    context.lineWidth = 2;
+    
+    // Draw a simple floral design
+    context.beginPath();
+    context.moveTo(30, 64);
+    context.bezierCurveTo(45, 44, 75, 44, 90, 64);
+    context.bezierCurveTo(75, 84, 45, 84, 30, 64);
+    context.stroke();
+    
+    // Add some details
+    context.beginPath();
+    context.moveTo(60, 40);
+    context.lineTo(60, 24);
+    context.stroke();
+    
+    context.beginPath();
+    context.arc(60, 20, 4, 0, Math.PI * 2);
+    context.stroke();
+    
+    // Add another detail
+    context.beginPath();
+    context.moveTo(30, 80);
+    context.bezierCurveTo(45, 100, 75, 100, 90, 80);
+    context.stroke();
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.transparent = true;
   return texture;
 };
 
@@ -112,6 +155,7 @@ const lipsTexture = createLipsTexture();
 const hairTexture = createHairTexture();
 const clothingTexture = createClothingTexture();
 const earTexture = createEarTexture();
+const tattooTexture = createTattooTexture();
 
 interface MelanieCharacterProps {
   position: [number, number, number];
@@ -145,6 +189,30 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         <meshStandardMaterial map={clothingTexture} color="#9b87f5" />
       </mesh>
       
+      {/* Belly Button with Piercing */}
+      <group position={[0, 0.7, 0.2]}>
+        {/* Belly button */}
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[0.02, 8, 8]} />
+          <meshStandardMaterial color="#b38e70" />
+        </mesh>
+        {/* Piercing */}
+        <mesh position={[0, -0.03, 0.02]}>
+          <torusGeometry args={[0.015, 0.003, 8, 16]} />
+          <meshStandardMaterial color="#c0c0c0" metalness={0.8} roughness={0.2} />
+        </mesh>
+      </group>
+      
+      {/* Arm Tattoo (Right) */}
+      <mesh position={[0.25, 0.8, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <cylinderGeometry args={[0.08, 0.08, 0.5, 16]} />
+        <meshStandardMaterial color="#c39f81" />
+      </mesh>
+      <mesh position={[0.25, 0.8, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <cylinderGeometry args={[0.082, 0.082, 0.45, 16]} />
+        <meshStandardMaterial transparent={true} map={tattooTexture} opacity={0.85} />
+      </mesh>
+      
       {/* Head */}
       <mesh position={[0, 1.35, 0]}>
         <sphereGeometry args={[0.25, 32, 32]} />
@@ -154,25 +222,25 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
       {/* Back of Head Hair (covering the bald spot) */}
       <mesh position={[0, 1.35, -0.15]}>
         <sphereGeometry args={[0.27, 16, 16, 0, Math.PI, Math.PI/2, Math.PI]} />
-        <meshStandardMaterial map={hairTexture} color="#120d0a" />
+        <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
       {/* Top Hair */}
       <mesh position={[0, 1.5, 0]}>
         <sphereGeometry args={[0.27, 16, 16, 0, Math.PI * 2, 0, Math.PI/2]} />
-        <meshStandardMaterial map={hairTexture} color="#120d0a" />
+        <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
       {/* Side Hair (Left) */}
       <mesh position={[-0.2, 1.35, 0]}>
         <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial map={hairTexture} color="#120d0a" />
+        <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
       {/* Side Hair (Right) */}
       <mesh position={[0.2, 1.35, 0]}>
         <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial map={hairTexture} color="#120d0a" />
+        <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
       {/* Eyes */}
@@ -185,23 +253,23 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         <meshStandardMaterial map={eyeTexture} />
       </mesh>
       
-      {/* Smaller Eyelids */}
+      {/* Eyelids */}
       <mesh position={[0.1, 1.43, 0.19]}>
         <planeGeometry args={[0.09, 0.02]} />
-        <meshStandardMaterial color="#120d0a" />
+        <meshStandardMaterial color="#0a0a0a" />
       </mesh>
       <mesh position={[-0.1, 1.43, 0.19]}>
         <planeGeometry args={[0.09, 0.02]} />
-        <meshStandardMaterial color="#120d0a" />
+        <meshStandardMaterial color="#0a0a0a" />
       </mesh>
       
-      {/* More Attractive Nose */}
+      {/* Nose */}
       <mesh position={[0, 1.35, 0.22]}>
         <sphereGeometry args={[0.05, 8, 8]} />
-        <meshStandardMaterial map={noseTexture} color="#ffcdba" />
+        <meshStandardMaterial map={noseTexture} color="#c39f81" />
       </mesh>
       
-      {/* Mouth */}
+      {/* Mouth/Lips */}
       <mesh position={[0, 1.28, 0.21]} rotation={[0, 0, 0]}>
         <planeGeometry args={[0.1, 0.03]} />
         <meshStandardMaterial map={lipsTexture} />

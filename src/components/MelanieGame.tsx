@@ -131,8 +131,8 @@ const MelanieGame: React.FC = () => {
             />
           </div>
           
-          {/* Music controls */}
-          <div className="flex space-x-2">
+          {/* Music controls - moved to bottom right */}
+          <div className="flex space-x-2 justify-end">
             <MusicUploader onSelectMusic={changeBackgroundMusic} />
             <MusicPlayer
               currentMusic={currentTrack}
