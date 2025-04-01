@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { ZoomIn, ZoomOut, Eye, EyeOff } from 'lucide-react';
+import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import MazeFloor from './MazeFloor';
 import MazeWall from './MazeWall';

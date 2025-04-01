@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -46,6 +47,214 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   const darkerClothes = new THREE.Color('#7E69AB'); // Darker purple for shading
   const jeansColor = new THREE.Color('#4a47a3');   // Jeans color
   
+  // Create face texture function
+  function createFaceTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      // Base skin color
+      context.fillStyle = '#f8d8c8';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Create softer blush on cheeks
+      const blushGradient = context.createRadialGradient(64, 140, 5, 64, 140, 30);
+      blushGradient.addColorStop(0, 'rgba(225, 150, 150, 0.4)');
+      blushGradient.addColorStop(1, 'rgba(225, 150, 150, 0)');
+      
+      context.fillStyle = blushGradient;
+      context.beginPath();
+      context.arc(64, 140, 30, 0, Math.PI * 2);
+      context.fill();
+      
+      const blushGradient2 = context.createRadialGradient(192, 140, 5, 192, 140, 30);
+      blushGradient2.addColorStop(0, 'rgba(225, 150, 150, 0.4)');
+      blushGradient2.addColorStop(1, 'rgba(225, 150, 150, 0)');
+      
+      context.fillStyle = blushGradient2;
+      context.beginPath();
+      context.arc(192, 140, 30, 0, Math.PI * 2);
+      context.fill();
+      
+      // Add subtle skin highlights for more dimension
+      context.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      context.beginPath();
+      context.ellipse(128, 100, 100, 70, 0, 0, Math.PI * 2);
+      context.fill();
+    }
+    
+    return canvas;
+  }
+  
+  // Create lips texture function
+  function createLipsTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 64;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      // Transparent background
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Create lip gradient for more natural look
+      const lipGradient = context.createLinearGradient(0, 0, 0, canvas.height);
+      lipGradient.addColorStop(0, '#d98c8c');
+      lipGradient.addColorStop(0.5, '#e09d9d');
+      lipGradient.addColorStop(1, '#d98c8c');
+      
+      context.fillStyle = lipGradient;
+      
+      // Upper lip shape
+      context.beginPath();
+      context.moveTo(20, 20);
+      context.quadraticCurveTo(64, 5, 108, 20);
+      context.quadraticCurveTo(64, 35, 20, 20);
+      context.fill();
+      
+      // Lower lip shape - slightly fuller
+      context.beginPath();
+      context.moveTo(20, 22);
+      context.quadraticCurveTo(64, 50, 108, 22);
+      context.quadraticCurveTo(64, 25, 20, 22);
+      context.fill();
+      
+      // Add subtle lip gloss highlight
+      context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      context.beginPath();
+      context.ellipse(64, 23, 40, 5, 0, 0, Math.PI);
+      context.fill();
+    }
+    
+    return canvas;
+  }
+  
+  // Create hair texture function
+  function createHairTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      // Base hair color
+      context.fillStyle = '#1a1a1a';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Add subtle hair strands and highlights
+      for (let i = 0; i < 100; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const width = Math.random() * 4 + 1;
+        const height = Math.random() * 20 + 10;
+        const angle = Math.random() * Math.PI;
+        
+        context.save();
+        context.translate(x, y);
+        context.rotate(angle);
+        
+        // Vary strand colors slightly for more natural look
+        const brightness = Math.random() * 20 + 10;
+        context.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+        context.fillRect(-width/2, -height/2, width, height);
+        
+        context.restore();
+      }
+      
+      // Add subtle highlight areas
+      context.fillStyle = 'rgba(80, 80, 80, 0.2)';
+      context.beginPath();
+      context.ellipse(128, 128, 100, 80, 0, 0, Math.PI * 2);
+      context.fill();
+    }
+    
+    return canvas;
+  }
+  
+  // Create clothing texture function
+  function createClothingTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      // Base clothing color - purple
+      context.fillStyle = '#9B87F5';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Add subtle pattern to clothing
+      context.strokeStyle = 'rgba(155, 135, 245, 0.7)';
+      context.lineWidth = 2;
+      
+      // Create grid pattern
+      const gridSize = 20;
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, canvas.height);
+        context.stroke();
+      }
+      
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(canvas.width, y);
+        context.stroke();
+      }
+      
+      // Add shading/highlight
+      const gradient = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0.2)');
+      
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    return canvas;
+  }
+  
+  // Create ear texture function
+  function createEarTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const context = canvas.getContext('2d');
+    
+    if (context) {
+      // Base ear color - slightly darker than skin tone
+      context.fillStyle = '#f0d0b8';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Add ear canal
+      context.fillStyle = '#e0c0a8';
+      context.beginPath();
+      context.arc(64, 64, 20, 0, Math.PI * 2);
+      context.fill();
+      
+      context.fillStyle = '#d0b098';
+      context.beginPath();
+      context.arc(64, 64, 12, 0, Math.PI * 2);
+      context.fill();
+      
+      context.fillStyle = '#a08070';
+      context.beginPath();
+      context.arc(64, 64, 6, 0, Math.PI * 2);
+      context.fill();
+      
+      // Add highlights
+      context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      context.beginPath();
+      context.ellipse(50, 50, 30, 20, Math.PI/4, 0, Math.PI * 2);
+      context.fill();
+    }
+    
+    return canvas;
+  }
+
   // Create custom face texture
   const [faceTexture] = useState(() => new THREE.CanvasTexture(createFaceTexture()));
   
