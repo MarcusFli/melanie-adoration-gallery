@@ -283,9 +283,9 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         <meshStandardMaterial map={faceTexture} />
       </mesh>
 
-      {/* Complete Hair Coverage */}
-      {/* Back of Head Hair - Full coverage */}
-      <mesh position={[0, 1.35, 0]}>
+      {/* Hair - Revised to not cover face */}
+      {/* Back of Head Hair */}
+      <mesh position={[0, 1.35, -0.1]}>
         <sphereGeometry args={[0.27, 32, 32, Math.PI/2, Math.PI, 0, Math.PI]} />
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
@@ -296,19 +296,19 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
-      {/* Side Hair (Left) - More volume */}
-      <mesh position={[-0.2, 1.35, 0]}>
+      {/* Side Hair (Left) - Adjusted to not cover face */}
+      <mesh position={[-0.2, 1.35, -0.08]}>
         <sphereGeometry args={[0.18, 16, 16]} />
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
-      {/* Side Hair (Right) - More volume */}
-      <mesh position={[0.2, 1.35, 0]}>
+      {/* Side Hair (Right) - Adjusted to not cover face */}
+      <mesh position={[0.2, 1.35, -0.08]}>
         <sphereGeometry args={[0.18, 16, 16]} />
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />
       </mesh>
       
-      {/* Hair at nape of neck for complete coverage */}
+      {/* Hair at nape of neck */}
       <mesh position={[0, 1.2, -0.15]}>
         <sphereGeometry args={[0.15, 16, 16]} />
         <meshStandardMaterial map={hairTexture} color="#0a0a0a" />

@@ -1,13 +1,16 @@
+
 import React from 'react';
-import { HeartCrack, Sparkles, Skull, Cat, RotateCcw, Eye } from 'lucide-react';
+import { HeartCrack, Sparkles, Skull, Cat, RotateCcw, Eye, Map, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GameState } from '@/hooks/useGameState';
+
 interface GameOverlaysProps {
   gameState: GameState;
   showStory: boolean;
   setShowStory: (show: boolean) => void;
   startGame: () => void;
 }
+
 const GameOverlays: React.FC<GameOverlaysProps> = ({
   gameState,
   showStory,
@@ -18,6 +21,7 @@ const GameOverlays: React.FC<GameOverlaysProps> = ({
     gameOver,
     level
   } = gameState;
+  
   return <>
       {/* Story overlay */}
       {showStory && <div className="absolute inset-0 z-20 bg-black/80 flex flex-col items-center justify-center p-6 rounded-lg">
@@ -55,7 +59,19 @@ const GameOverlays: React.FC<GameOverlaysProps> = ({
                 </li>
                 <li className="flex items-center mt-3 pt-2 border-t border-melanie-purple/30">
                   <Eye className="w-4 h-4 mr-2 text-melanie-purple" />
-                  <span>Usa la rueda 3D en la esquina para cambiar la perspectiva de la cámara</span>
+                  <span>Cambia entre las tres vistas disponibles:</span>
+                </li>
+                <li className="flex items-center pl-6">
+                  <Map className="w-4 h-4 mr-2 text-melanie-purple" />
+                  <span>Vista Aérea - Visión completa del laberinto</span>
+                </li>
+                <li className="flex items-center pl-6">
+                  <User className="w-4 h-4 mr-2 text-melanie-purple" />
+                  <span>Vista Seguimiento - Cámara detrás de Melanie</span>
+                </li>
+                <li className="flex items-center pl-6">
+                  <Eye className="w-4 h-4 mr-2 text-melanie-purple" />
+                  <span>Primera Persona - Ver a través de los ojos de Melanie</span>
                 </li>
               </ul>
             </div>
@@ -85,4 +101,5 @@ const GameOverlays: React.FC<GameOverlaysProps> = ({
       </div>
     </>;
 };
+
 export default GameOverlays;

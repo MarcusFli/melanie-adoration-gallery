@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { ZoomIn, ZoomOut, Eye, EyeOff } from 'lucide-react';
+import { ZoomIn, ZoomOut, Eye, EyeOff, User, Map } from 'lucide-react';
 import * as THREE from 'three';
 import { Button } from '@/components/ui/button';
 import MazeFloor from './MazeFloor';
@@ -29,7 +29,7 @@ const CameraController = ({
   playerPosition: { x: number; y: number }; 
   playerDirection: number;
   zoom: number;
-  viewMode: 'firstPerson' | 'topDown';
+  viewMode: 'topDown' | 'follow' | 'firstPerson';
 }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
@@ -38,18 +38,18 @@ const CameraController = ({
   
   useEffect(() => {
     if (controlsRef.current) {
+      // Direction offset vectors for each cardinal direction
+      const directionOffset = [
+        [0, 0, -1], // North
+        [1, 0, 0],  // East
+        [0, 0, 1],  // South
+        [-1, 0, 0]  // West
+      ];
+
+      const [offsetX, offsetY, offsetZ] = directionOffset[playerDirection];
+      
       if (viewMode === 'firstPerson') {
         // First person view - position camera at player's eye level and looking in their direction
-        const directionOffset = [
-          [0, 0, -1], // North
-          [1, 0, 0],  // East
-          [0, 0, 1],  // South
-          [-1, 0, 0]  // West
-        ];
-
-        const [offsetX, offsetY, offsetZ] = directionOffset[playerDirection];
-        
-        // Position camera at player's position (eye level)
         camera.position.set(
           playerPosition.x,
           1.5, // Eye level
@@ -64,7 +64,39 @@ const CameraController = ({
         );
         
         camera.lookAt(lookAtPosition);
-      } else {
+        
+        if (controlsRef.current) {
+          controlsRef.current.enabled = false;
+        }
+      } 
+      else if (viewMode === 'follow') {
+        // Follow view - position camera behind player
+        const distanceBehind = 1.5;
+        
+        // Calculate position behind player based on direction
+        const cameraX = playerPosition.x - offsetX * distanceBehind;
+        const cameraZ = playerPosition.y - offsetZ * distanceBehind;
+        
+        camera.position.set(
+          cameraX,
+          2.0, // Slightly above player
+          cameraZ
+        );
+        
+        // Look at player's position plus a bit of offset in their facing direction
+        const lookAtPosition = new THREE.Vector3(
+          playerPosition.x + offsetX * 0.5,
+          1.2, // Look at upper body
+          playerPosition.y + offsetZ * 0.5
+        );
+        
+        camera.lookAt(lookAtPosition);
+        
+        if (controlsRef.current) {
+          controlsRef.current.enabled = false;
+        }
+      } 
+      else {
         // Top-down view
         camera.position.set(
           playerPosition.x,
@@ -73,13 +105,19 @@ const CameraController = ({
         );
         
         camera.lookAt(playerPosition.x, 0, playerPosition.y);
+        
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+        }
       }
       
       // Update last position and direction
       lastPositionRef.current = { x: playerPosition.x, y: playerPosition.y };
       lastDirectionRef.current = playerDirection;
       
-      controlsRef.current.update();
+      if (controlsRef.current) {
+        controlsRef.current.update();
+      }
     }
   }, [playerPosition, playerDirection, zoom, camera, viewMode]);
   
@@ -104,7 +142,7 @@ const MazeScene: React.FC<MazeSceneProps> = ({
   isMoving
 }) => {
   const [zoom, setZoom] = useState(1);
-  const [viewMode, setViewMode] = useState<'firstPerson' | 'topDown'>('topDown');
+  const [viewMode, setViewMode] = useState<'topDown' | 'follow' | 'firstPerson'>('topDown');
   
   // Handle zoom controls
   useEffect(() => {
@@ -126,9 +164,30 @@ const MazeScene: React.FC<MazeSceneProps> = ({
     };
   }, [viewMode]);
 
-  // Toggle between first person and top-down view
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === 'topDown' ? 'firstPerson' : 'topDown');
+  // Cycle through view modes
+  const cycleViewMode = () => {
+    setViewMode(prev => {
+      if (prev === 'topDown') return 'follow';
+      if (prev === 'follow') return 'firstPerson';
+      return 'topDown';
+    });
+  };
+
+  // Get icon and label based on current view mode
+  const getViewModeIcon = () => {
+    switch (viewMode) {
+      case 'topDown': return <Map className="h-5 w-5" />;
+      case 'follow': return <User className="h-5 w-5" />;
+      case 'firstPerson': return <Eye className="h-5 w-5" />;
+    }
+  };
+
+  const getViewModeLabel = () => {
+    switch (viewMode) {
+      case 'topDown': return "Vista Aérea";
+      case 'follow': return "Seguir";
+      case 'firstPerson': return "Primera Persona";
+    }
   };
 
   return (
@@ -185,8 +244,8 @@ const MazeScene: React.FC<MazeSceneProps> = ({
           ))
         )}
         
-        {/* Player Character (only visible in top-down view) */}
-        {viewMode === 'topDown' && (
+        {/* Player Character (only visible in top-down and follow views) */}
+        {viewMode !== 'firstPerson' && (
           <MelanieCharacter 
             position={[playerPosition.x, 0.3, playerPosition.y]} 
             direction={playerDirection}
@@ -206,39 +265,21 @@ const MazeScene: React.FC<MazeSceneProps> = ({
           zoom={zoom}
           viewMode={viewMode}
         />
-        
-        {viewMode === 'topDown' && (
-          <PerspectiveCamera 
-            makeDefault 
-            position={[playerPosition.x, 5, playerPosition.y]} 
-            fov={60 / zoom} // Adjust FOV based on zoom level
-          />
-        )}
-        
-        {viewMode === 'firstPerson' && (
-          <PerspectiveCamera 
-            makeDefault 
-            position={[playerPosition.x, 1.5, playerPosition.y]} 
-            fov={70} 
-          />
-        )}
       </Canvas>
       
       {/* View Mode Toggle Button */}
       <div className="absolute top-6 right-6 z-30">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-melanie-purple/30 text-white"
-          onClick={toggleViewMode}
-          title={viewMode === 'topDown' ? "Switch to First Person" : "Switch to Top Down"}
-        >
-          {viewMode === 'topDown' ? (
-            <Eye className="h-5 w-5" />
-          ) : (
-            <EyeOff className="h-5 w-5" />
-          )}
-        </Button>
+        <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-melanie-purple/30 text-white overflow-hidden">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="flex flex-col items-center gap-1 p-2 text-white hover:bg-melanie-purple/20"
+            onClick={cycleViewMode}
+          >
+            {getViewModeIcon()}
+            <span className="text-xs">{getViewModeLabel()}</span>
+          </Button>
+        </div>
       </div>
       
       {/* Zoom Controls UI (only in top-down view) */}
