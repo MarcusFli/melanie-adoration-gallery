@@ -2,6 +2,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { ZoomIn, ZoomOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import MazeFloor from './MazeFloor';
 import MazeWall from './MazeWall';
 import MazeCeiling from './MazeCeiling';
@@ -89,15 +91,13 @@ const MazeScene: React.FC<MazeSceneProps> = ({
         {/* Maze Ceiling */}
         <MazeCeiling 
           width={maze.width} 
-          height={maze.height} 
-          position={[maze.width / 2 - 0.5, 2, maze.height / 2 - 0.5]} 
+          height={maze.height}
         />
         
         {/* Maze Floor */}
         <MazeFloor 
           width={maze.width} 
-          height={maze.height} 
-          position={[maze.width / 2 - 0.5, 0, maze.height / 2 - 0.5]} 
+          height={maze.height}
         />
         
         {/* Maze Walls */}
@@ -107,29 +107,29 @@ const MazeScene: React.FC<MazeSceneProps> = ({
               {cell.walls.top && (
                 <MazeWall 
                   position={[x, 1, y - 0.5]} 
-                  rotation={[0, 0, 0]} 
-                  positionType={cell.specialPosition ? cell.specialPosition : 'normal'}
+                  rotationY={0}
+                  positionType="normal"
                 />
               )}
               {cell.walls.right && (
                 <MazeWall 
                   position={[x + 0.5, 1, y]} 
-                  rotation={[0, Math.PI / 2, 0]} 
-                  positionType={cell.specialPosition ? cell.specialPosition : 'normal'}
+                  rotationY={Math.PI / 2}
+                  positionType="normal"
                 />
               )}
               {cell.walls.bottom && (
                 <MazeWall 
                   position={[x, 1, y + 0.5]} 
-                  rotation={[0, 0, 0]} 
-                  positionType={cell.specialPosition ? cell.specialPosition : 'normal'}
+                  rotationY={0}
+                  positionType="normal"
                 />
               )}
               {cell.walls.left && (
                 <MazeWall 
                   position={[x - 0.5, 1, y]} 
-                  rotation={[0, Math.PI / 2, 0]} 
-                  positionType={cell.specialPosition ? cell.specialPosition : 'normal'}
+                  rotationY={Math.PI / 2}
+                  positionType="normal"
                 />
               )}
             </React.Fragment>

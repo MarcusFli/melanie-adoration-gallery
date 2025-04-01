@@ -1,4 +1,3 @@
-
 // Depth-first search maze generation algorithm
 // This creates perfect mazes (exactly one path between any two cells)
 
@@ -12,6 +11,7 @@ export interface Cell {
     bottom: boolean;
     left: boolean;
   };
+  specialPosition?: string; // Add this optional property
 }
 
 export interface Maze {
@@ -33,6 +33,7 @@ const createEmptyCell = (x: number, y: number): Cell => ({
     bottom: true,
     left: true,
   },
+  specialPosition: undefined
 });
 
 // Get random element from array
