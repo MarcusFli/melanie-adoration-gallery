@@ -18,8 +18,8 @@ const MazeWall: React.FC<MazeWallProps> = ({
   
   useFrame((state) => {
     if (meshRef.current && meshRef.current.material instanceof THREE.MeshStandardMaterial) {
-      // Simplified color animation to avoid flickering
-      const time = state.clock.elapsedTime * 0.3;
+      // Reduced speed by 50% to make color transitions slower
+      const time = state.clock.elapsedTime * 0.15;
       const colorValue = 0x8B5CF6 + Math.sin(time) * 0x080808;
       meshRef.current.material.color.setHex(colorValue);
     }

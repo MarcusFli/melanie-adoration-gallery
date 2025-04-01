@@ -4,12 +4,13 @@ import { useRef, useState, useEffect } from 'react';
 export function useAudioManager() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [customMusicUrl, setCustomMusicUrl] = useState<string | null>(null);
+  const [currentTrack, setCurrentTrack] = useState<string | null>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement | null>(null);
   const effectsAudioRef = useRef<HTMLAudioElement | null>(null);
   
   // Initialize audio
   useEffect(() => {
-    const audio = new Audio('/lovable-uploads/c933c249-c927-447f-8e72-a4c08a0764e9.png');
+    const audio = new Audio();
     audio.loop = true;
     audio.volume = 0.4;
     backgroundAudioRef.current = audio;
@@ -57,21 +58,23 @@ export function useAudioManager() {
       // Set new source
       backgroundAudioRef.current.src = url;
       setCustomMusicUrl(url);
+      setCurrentTrack(url);
       
-      // Resume playback if it was playing
-      if (wasPlaying && soundEnabled) {
+      // Auto-play new music
+      if (soundEnabled) {
         backgroundAudioRef.current.play().catch(err => {
           console.error("Audio playback failed:", err);
+          setSoundEnabled(false);
         });
       }
     }
   };
 
-  // Play soundtrack when game starts or when customMusicUrl changes
+  // Play soundtrack when customMusicUrl changes
   useEffect(() => {
-    if (backgroundAudioRef.current && soundEnabled) {
-      // If we have custom music, use that instead of default
-      if (customMusicUrl && backgroundAudioRef.current.src !== customMusicUrl) {
+    if (backgroundAudioRef.current && soundEnabled && customMusicUrl) {
+      // If we have custom music, use that
+      if (backgroundAudioRef.current.src !== customMusicUrl) {
         backgroundAudioRef.current.src = customMusicUrl;
       }
       
@@ -118,6 +121,7 @@ export function useAudioManager() {
     soundEnabled,
     toggleSound,
     playSound,
-    changeBackgroundMusic
+    changeBackgroundMusic,
+    currentTrack
   };
 }

@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -32,6 +31,7 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
   // Clothing refs
   const dressRef = useRef<THREE.Mesh>(null);
   const hairTopRef = useRef<THREE.Mesh>(null);
+  const hairBackRef = useRef<THREE.Mesh>(null);
   
   // Color change for lights
   const [lightColor, setLightColor] = useState(new THREE.Color('#9B87F5'));
@@ -74,222 +74,47 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
     const context = canvas.getContext('2d');
     
     if (context) {
-      // Base nose color
+      // Base nose color - more natural tone
+      context.fillStyle = '#f5d0c5';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Create softer, more refined nose shape
       context.fillStyle = '#f0c5b5';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Create nostril shapes
-      context.fillStyle = '#d5a598';
       context.beginPath();
-      context.arc(42, 85, 12, 0, Math.PI * 2);
-      context.arc(86, 85, 12, 0, Math.PI * 2);
+      context.ellipse(64, 64, 40, 50, 0, 0, Math.PI * 2);
       context.fill();
       
-      // Create nostril shadows
-      context.fillStyle = '#b58577';
+      // Create nostril shapes - more subtle and natural
+      context.fillStyle = '#e0b5a8';
       context.beginPath();
-      context.arc(42, 85, 6, 0, Math.PI * 2);
-      context.arc(86, 85, 6, 0, Math.PI * 2);
+      context.ellipse(50, 85, 10, 8, 0, 0, Math.PI * 2);
+      context.ellipse(78, 85, 10, 8, 0, 0, Math.PI * 2);
       context.fill();
       
-      // Create bridge shadow
-      const gradient = context.createLinearGradient(64, 20, 64, 60);
-      gradient.addColorStop(0, 'rgba(213, 165, 152, 0.2)');
-      gradient.addColorStop(1, 'rgba(213, 165, 152, 0.6)');
+      // Create nostril shadows - softer
+      context.fillStyle = '#d0a598';
+      context.beginPath();
+      context.ellipse(50, 85, 5, 4, 0, 0, Math.PI * 2);
+      context.ellipse(78, 85, 5, 4, 0, 0, Math.PI * 2);
+      context.fill();
+      
+      // Create bridge highlight for more defined shape
+      const gradient = context.createLinearGradient(64, 20, 64, 70);
+      gradient.addColorStop(0, 'rgba(255, 245, 240, 0.4)');
+      gradient.addColorStop(1, 'rgba(255, 245, 240, 0.1)');
       context.fillStyle = gradient;
       context.beginPath();
-      context.moveTo(44, 20);
-      context.quadraticCurveTo(64, 10, 84, 20);
-      context.quadraticCurveTo(64, 60, 44, 20);
-      context.fill();
-    }
-    
-    return canvas;
-  }
-  
-  function createEarTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
-    const context = canvas.getContext('2d');
-    
-    if (context) {
-      // Base ear color
-      context.fillStyle = '#f8d8c8';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Add ear details
-      const gradient = context.createRadialGradient(64, 64, 10, 64, 64, 50);
-      gradient.addColorStop(0, '#f8d8c8');
-      gradient.addColorStop(0.8, '#e5c6b6');
-      gradient.addColorStop(1, '#d5b6a6');
-      
-      context.fillStyle = gradient;
-      context.beginPath();
-      context.arc(64, 64, 50, 0, Math.PI * 2);
+      context.moveTo(54, 30);
+      context.quadraticCurveTo(64, 20, 74, 30);
+      context.quadraticCurveTo(64, 70, 54, 30);
       context.fill();
       
-      // Inner ear
-      context.fillStyle = '#e8a897';
-      context.beginPath();
-      context.ellipse(64, 64, 25, 35, 0, 0, Math.PI * 2);
-      context.fill();
-    }
-    
-    return canvas;
-  }
-  
-  function createFaceTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const context = canvas.getContext('2d');
-    
-    if (context) {
-      // Base skin color
-      context.fillStyle = '#f8d8c8';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Add subtle skin tone variations for realism
-      context.fillStyle = '#f3d0bc';
-      for (let i = 0; i < 30; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const radius = Math.random() * 15 + 5;
-        context.beginPath();
-        context.arc(x, y, radius, 0, Math.PI * 2);
-        context.fill();
-      }
-      
-      // Add subtle blush to cheeks
-      context.fillStyle = 'rgba(240, 150, 150, 0.2)';
-      context.beginPath();
-      context.ellipse(160, 240, 50, 40, 0, 0, Math.PI * 2);
-      context.ellipse(352, 240, 50, 40, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      // Add more defined cheek bones
-      context.fillStyle = 'rgba(240, 150, 150, 0.1)';
-      context.beginPath();
-      context.ellipse(160, 220, 60, 50, 0, 0, Math.PI * 2);
-      context.ellipse(352, 220, 60, 50, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      // Add eyebrows with gradient - make them more defined
-      const eyebrowGradient = context.createLinearGradient(150, 160, 150, 180);
-      eyebrowGradient.addColorStop(0, '#1a1a1a');
-      eyebrowGradient.addColorStop(1, '#3a3a3a');
-      context.fillStyle = eyebrowGradient;
-      
-      // Left eyebrow - curved and more defined
-      context.beginPath();
-      context.moveTo(130, 160);
-      context.bezierCurveTo(160, 145, 190, 155, 210, 170);
-      context.bezierCurveTo(190, 175, 160, 165, 130, 170);
-      context.fill();
-      
-      // Right eyebrow - curved and more defined
-      context.beginPath();
-      context.moveTo(300, 160);
-      context.bezierCurveTo(330, 145, 360, 155, 380, 170);
-      context.bezierCurveTo(360, 175, 330, 165, 300, 170);
-      context.fill();
-      
-      // Add freckles for extra realism
-      context.fillStyle = 'rgba(210, 150, 120, 0.4)';
-      for (let i = 0; i < 15; i++) {
-        const x = 150 + Math.random() * 212;
-        const y = 180 + Math.random() * 120;
-        const radius = Math.random() * 2 + 1;
-        context.beginPath();
-        context.arc(x, y, radius, 0, Math.PI * 2);
-        context.fill();
-      }
-      
-      // Add contour to face for more shape
-      const contourGradient = context.createRadialGradient(256, 256, 200, 256, 256, 256);
-      contourGradient.addColorStop(0, 'rgba(0,0,0,0)');
-      contourGradient.addColorStop(1, 'rgba(210, 150, 120, 0.15)');
-      context.fillStyle = contourGradient;
-      context.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    
-    return canvas;
-  }
-  
-  function createLipsTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 128;
-    const context = canvas.getContext('2d');
-    
-    if (context) {
-      // Clear canvas
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Create gradient for lips - enhance colors
-      const lipGradient = context.createLinearGradient(0, 30, 0, 80);
-      lipGradient.addColorStop(0, '#e09595');   // Brighter top
-      lipGradient.addColorStop(0.5, '#e3a6a6'); // Middle
-      lipGradient.addColorStop(1, '#c27878');   // Darker bottom
-      context.fillStyle = lipGradient;
-      
-      // Draw upper lip with more detail
-      context.beginPath();
-      context.moveTo(60, 40);
-      context.bezierCurveTo(90, 30, 128, 25, 166, 30);
-      context.bezierCurveTo(196, 40, 166, 50, 128, 50);
-      context.bezierCurveTo(90, 50, 60, 40, 60, 40);
-      context.fill();
-      
-      // Draw cupid's bow - more pronounced
-      context.beginPath();
-      context.moveTo(118, 35);
-      context.quadraticCurveTo(128, 28, 138, 35);
-      context.strokeStyle = '#c27878';
-      context.lineWidth = 2;
-      context.stroke();
-      
-      // Draw lower lip with more detail - fuller
-      context.beginPath();
-      context.moveTo(60, 40);
-      context.bezierCurveTo(90, 75, 128, 90, 166, 75);
-      context.bezierCurveTo(196, 40, 166, 95, 128, 95);
-      context.bezierCurveTo(90, 95, 60, 40, 60, 40);
-      context.fillStyle = lipGradient;
-      context.fill();
-      
-      // Add lip shine and texture - more natural
-      context.fillStyle = 'rgba(255,255,255,0.3)';
-      context.beginPath();
-      context.ellipse(128, 45, 40, 10, 0, 0, Math.PI * 2);
-      context.fill();
-      
-      // Add subtle lip lines
-      context.strokeStyle = 'rgba(180,100,100,0.2)';
-      context.lineWidth = 1;
-      for (let i = 0; i < 10; i++) {
-        context.beginPath();
-        context.moveTo(80 + i * 10, 50);
-        context.lineTo(80 + i * 10, 75);
-        context.stroke();
-      }
-      
-      // Add lip edge definition
-      context.strokeStyle = 'rgba(180,100,100,0.4)';
+      // Add subtle contours
+      context.strokeStyle = 'rgba(210, 180, 170, 0.2)';
       context.lineWidth = 2;
       context.beginPath();
-      context.moveTo(60, 40);
-      context.bezierCurveTo(90, 30, 128, 25, 166, 30);
-      context.bezierCurveTo(196, 40, 166, 50, 128, 50);
-      context.bezierCurveTo(90, 50, 60, 40, 60, 40);
-      context.stroke();
-      
-      context.beginPath();
-      context.moveTo(60, 40);
-      context.bezierCurveTo(90, 75, 128, 90, 166, 75);
-      context.bezierCurveTo(196, 40, 166, 95, 128, 95);
-      context.bezierCurveTo(90, 95, 60, 40, 60, 40);
+      context.moveTo(64, 40);
+      context.lineTo(64, 80);
       context.stroke();
     }
     
@@ -390,129 +215,6 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
     return canvas;
   }
   
-  function createHairTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const context = canvas.getContext('2d');
-    
-    if (context) {
-      // Base hair color
-      context.fillStyle = '#1a1a1a';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Add hair strands for texture
-      context.strokeStyle = '#2a2a2a';
-      context.lineWidth = 2;
-      
-      for (let i = 0; i < 300; i++) {
-        const x = Math.random() * canvas.width;
-        const length = Math.random() * 100 + 50;
-        const curve = Math.random() * 30 - 15;
-        
-        context.beginPath();
-        context.moveTo(x, 0);
-        context.bezierCurveTo(
-          x + curve, length / 3,
-          x - curve, length / 2,
-          x, length
-        );
-        context.stroke();
-      }
-      
-      // Add highlights
-      context.strokeStyle = 'rgba(80,80,80,0.5)';
-      for (let i = 0; i < 50; i++) {
-        const x = Math.random() * canvas.width;
-        const length = Math.random() * 150 + 50;
-        
-        context.beginPath();
-        context.moveTo(x, 0);
-        context.lineTo(x, length);
-        context.stroke();
-      }
-      
-      // Add some very subtle blue/purple highlights
-      context.strokeStyle = 'rgba(100,100,160,0.1)';
-      for (let i = 0; i < 30; i++) {
-        const x = Math.random() * canvas.width;
-        const length = Math.random() * 150 + 50;
-        
-        context.beginPath();
-        context.moveTo(x, 0);
-        context.lineTo(x, length);
-        context.lineWidth = Math.random() * 3 + 1;
-        context.stroke();
-      }
-    }
-    
-    return canvas;
-  }
-  
-  function createClothingTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const context = canvas.getContext('2d');
-    
-    if (context) {
-      // Base color
-      context.fillStyle = '#9B87F5';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Add subtle pattern
-      context.fillStyle = '#8A76E4';
-      
-      // Create grid pattern
-      const gridSize = 20;
-      for (let x = 0; x < canvas.width; x += gridSize) {
-        for (let y = 0; y < canvas.height; y += gridSize) {
-          if ((x / gridSize + y / gridSize) % 2 === 0) {
-            context.fillRect(x, y, gridSize, gridSize);
-          }
-        }
-      }
-      
-      // Add some random texture details
-      context.fillStyle = '#B79FFF';
-      for (let i = 0; i < 200; i++) {
-        const size = Math.random() * 5 + 2;
-        context.beginPath();
-        context.arc(
-          Math.random() * canvas.width,
-          Math.random() * canvas.height,
-          size,
-          0,
-          Math.PI * 2
-        );
-        context.fill();
-      }
-      
-      // Add some fabric wrinkles
-      context.strokeStyle = 'rgba(100,80,200,0.2)';
-      for (let i = 0; i < 40; i++) {
-        const startX = Math.random() * canvas.width;
-        const startY = Math.random() * canvas.height;
-        const length = Math.random() * 100 + 50;
-        const curveFactor = Math.random() * 50 - 25;
-        
-        context.beginPath();
-        context.moveTo(startX, startY);
-        context.quadraticCurveTo(
-          startX + length/2 + curveFactor, 
-          startY + curveFactor, 
-          startX + length, 
-          startY + Math.random() * 20 - 10
-        );
-        context.lineWidth = Math.random() * 2 + 1;
-        context.stroke();
-      }
-    }
-    
-    return canvas;
-  }
-
-  // Animation logic
   useFrame((state, delta) => {
     if (groupRef.current) {
       // Rotate character based on direction
@@ -523,8 +225,8 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         0.2
       );
       
-      // Slow color change for character glow
-      lightChangeTimeRef.current += delta * 0.2; // Reduced from original speed for slower changes
+      // Slow color change for character glow (reduced by 50%)
+      lightChangeTimeRef.current += delta * 0.1; // Further reduced from 0.2 to 0.1
       const hue = (Math.sin(lightChangeTimeRef.current) + 1) / 2;
       const color = new THREE.Color().setHSL(hue, 0.6, 0.6);
       setLightColor(color);
@@ -724,9 +426,9 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
           />
         </mesh>
         
-        {/* Nose - more prominent */}
+        {/* Improved nose - smaller, more refined shape */}
         <mesh ref={noseRef} position={[0, 1.15, 0.22]} castShadow>
-          <coneGeometry args={[0.05, 0.1, 16, 1, true]} />
+          <coneGeometry args={[0.04, 0.08, 16, 1, true]} />
           <meshStandardMaterial 
             map={noseTexture}
             color={skinColor}
@@ -734,14 +436,14 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
           />
         </mesh>
         
-        {/* Nostrils */}
-        <mesh position={[-0.02, 1.12, 0.25]} castShadow>
-          <sphereGeometry args={[0.01, 8, 8]} />
+        {/* Nostrils - more subtle */}
+        <mesh position={[-0.015, 1.12, 0.24]} castShadow>
+          <sphereGeometry args={[0.008, 8, 8]} />
           <meshStandardMaterial color="#4d3a33" roughness={0.7} />
         </mesh>
         
-        <mesh position={[0.02, 1.12, 0.25]} castShadow>
-          <sphereGeometry args={[0.01, 8, 8]} />
+        <mesh position={[0.015, 1.12, 0.24]} castShadow>
+          <sphereGeometry args={[0.008, 8, 8]} />
           <meshStandardMaterial color="#4d3a33" roughness={0.7} />
         </mesh>
         
@@ -790,24 +492,24 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
           />
         </mesh>
         
-        {/* Eyelids - to make blinking more realistic */}
+        {/* Smaller eyelids for more opened eyes */}
         <mesh position={[-0.09, 1.23, 0.22]} castShadow>
-          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.4]} />
           <meshStandardMaterial color={skinColor} roughness={0.6} />
         </mesh>
         
         <mesh position={[0.09, 1.23, 0.22]} castShadow>
-          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.4]} />
           <meshStandardMaterial color={skinColor} roughness={0.6} />
         </mesh>
         
         <mesh position={[-0.09, 1.17, 0.22]} rotation={[Math.PI, 0, 0]} castShadow>
-          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.4]} />
           <meshStandardMaterial color={skinColor} roughness={0.6} />
         </mesh>
         
         <mesh position={[0.09, 1.17, 0.22]} rotation={[Math.PI, 0, 0]} castShadow>
-          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5]} />
+          <sphereGeometry args={[0.052, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.4]} />
           <meshStandardMaterial color={skinColor} roughness={0.6} />
         </mesh>
         
@@ -849,6 +551,26 @@ const MelanieCharacter: React.FC<MelanieCharacterProps> = ({ position, direction
         {/* Main hair */}
         <mesh ref={hairTopRef} position={[0, 1.25, 0]} castShadow>
           <sphereGeometry args={[0.27, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        {/* Back of head hair - covers the back completely */}
+        <mesh ref={hairBackRef} position={[0, 1.05, -0.1]} castShadow>
+          <sphereGeometry args={[0.24, 32, 32, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} />
+          <meshStandardMaterial 
+            map={hairTexture}
+            color={hairColor} 
+            roughness={0.8}
+          />
+        </mesh>
+        
+        {/* Additional hair at the back of neck */}
+        <mesh position={[0, 0.9, -0.15]} castShadow>
+          <boxGeometry args={[0.35, 0.3, 0.2]} />
           <meshStandardMaterial 
             map={hairTexture}
             color={hairColor} 

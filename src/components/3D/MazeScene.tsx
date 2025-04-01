@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MazeFloor from './MazeFloor';
 import MazeWall from './MazeWall';
@@ -22,36 +22,69 @@ interface MazeSceneProps {
 const CameraController = ({ 
   playerPosition, 
   playerDirection,
-  zoom
+  zoom,
+  viewMode
 }: { 
   playerPosition: { x: number; y: number }; 
   playerDirection: number;
   zoom: number;
+  viewMode: 'firstPerson' | 'topDown';
 }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
   
   useEffect(() => {
     if (controlsRef.current) {
-      // Set zoom level
-      camera.position.set(
-        playerPosition.x,
-        2.5 / zoom, // Adjust height based on zoom
-        playerPosition.y
-      );
+      if (viewMode === 'firstPerson') {
+        // First person view - position camera at player's eye level
+        const directionOffset = [
+          [0, 0, -0.5], // North
+          [0.5, 0, 0],  // East
+          [0, 0, 0.5],  // South
+          [-0.5, 0, 0]  // West
+        ];
+
+        const [offsetX, offsetY, offsetZ] = directionOffset[playerDirection];
+        
+        camera.position.set(
+          playerPosition.x + offsetX,
+          1.5, // Eye level
+          playerPosition.y + offsetZ
+        );
+        
+        // Look in the direction the player is facing
+        const lookAtPosition = new THREE.Vector3(
+          playerPosition.x + offsetX * 10,
+          1.5,
+          playerPosition.y + offsetZ * 10
+        );
+        
+        camera.lookAt(lookAtPosition);
+      } else {
+        // Top-down view
+        camera.position.set(
+          playerPosition.x,
+          5 / zoom, // Height based on zoom
+          playerPosition.y 
+        );
+        
+        camera.lookAt(playerPosition.x, 0, playerPosition.y);
+      }
+      
       controlsRef.current.update();
     }
-  }, [playerPosition, zoom, camera]);
+  }, [playerPosition, playerDirection, zoom, camera, viewMode]);
   
   return (
     <OrbitControls
       ref={controlsRef}
-      enablePan={false}
-      enableZoom={true}
-      maxPolarAngle={Math.PI / 2 - 0.1}
-      minPolarAngle={0.1}
-      maxDistance={10}
-      minDistance={1}
+      enablePan={viewMode === 'topDown'}
+      enableZoom={viewMode === 'topDown'}
+      enableRotate={viewMode === 'topDown'}
+      maxPolarAngle={viewMode === 'topDown' ? Math.PI / 2 - 0.1 : Math.PI}
+      minPolarAngle={viewMode === 'topDown' ? 0.1 : 0}
+      maxDistance={viewMode === 'topDown' ? 10 : 0.1}
+      minDistance={viewMode === 'topDown' ? 2 : 0.1}
     />
   );
 };
@@ -63,16 +96,19 @@ const MazeScene: React.FC<MazeSceneProps> = ({
   isMoving
 }) => {
   const [zoom, setZoom] = useState(1);
+  const [viewMode, setViewMode] = useState<'firstPerson' | 'topDown'>('topDown');
   
   // Handle zoom controls
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY < 0) {
-        // Zoom in
-        setZoom(prev => Math.min(prev + 0.1, 2));
-      } else {
-        // Zoom out
-        setZoom(prev => Math.max(prev - 0.1, 0.5));
+      if (viewMode === 'topDown') {
+        if (e.deltaY < 0) {
+          // Zoom in
+          setZoom(prev => Math.min(prev + 0.1, 2));
+        } else {
+          // Zoom out
+          setZoom(prev => Math.max(prev - 0.1, 0.5));
+        }
       }
     };
     
@@ -80,7 +116,12 @@ const MazeScene: React.FC<MazeSceneProps> = ({
     return () => {
       window.removeEventListener('wheel', handleWheel);
     };
-  }, []);
+  }, [viewMode]);
+
+  // Toggle between first person and top-down view
+  const toggleViewMode = () => {
+    setViewMode(prev => prev === 'topDown' ? 'firstPerson' : 'topDown');
+  };
 
   return (
     <div className="relative w-full h-full">
@@ -136,12 +177,14 @@ const MazeScene: React.FC<MazeSceneProps> = ({
           ))
         )}
         
-        {/* Player Character */}
-        <MelanieCharacter 
-          position={[playerPosition.x, 0.3, playerPosition.y]} 
-          direction={playerDirection}
-          isMoving={isMoving}
-        />
+        {/* Player Character (only visible in top-down view) */}
+        {viewMode === 'topDown' && (
+          <MelanieCharacter 
+            position={[playerPosition.x, 0.3, playerPosition.y]} 
+            direction={playerDirection}
+            isMoving={isMoving}
+          />
+        )}
         
         {/* Cat (End Goal) */}
         <CatModel 
@@ -153,37 +196,67 @@ const MazeScene: React.FC<MazeSceneProps> = ({
           playerPosition={playerPosition} 
           playerDirection={playerDirection}
           zoom={zoom}
+          viewMode={viewMode}
         />
         
-        <PerspectiveCamera 
-          makeDefault 
-          position={[playerPosition.x, 2.5, playerPosition.y]} 
-          fov={60 / zoom} // Adjust FOV based on zoom level
-        />
+        {viewMode === 'topDown' && (
+          <PerspectiveCamera 
+            makeDefault 
+            position={[playerPosition.x, 5, playerPosition.y]} 
+            fov={60 / zoom} // Adjust FOV based on zoom level
+          />
+        )}
+        
+        {viewMode === 'firstPerson' && (
+          <PerspectiveCamera 
+            makeDefault 
+            position={[playerPosition.x, 1.5, playerPosition.y]} 
+            fov={70} 
+          />
+        )}
       </Canvas>
       
-      {/* Zoom Controls UI */}
-      <div className="absolute bottom-24 right-6 z-30 flex flex-col bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-melanie-purple/30">
+      {/* View Mode Toggle Button */}
+      <div className="absolute top-6 right-6 z-30">
         <Button 
-          variant="ghost" 
+          variant="outline" 
           size="icon" 
-          className="text-white hover:bg-melanie-purple/20 mb-1"
-          onClick={() => setZoom(prev => Math.min(prev + 0.1, 2))}
+          className="bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-melanie-purple/30 text-white"
+          onClick={toggleViewMode}
+          title={viewMode === 'topDown' ? "Switch to First Person" : "Switch to Top Down"}
         >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <div className="text-xs text-center text-white py-1">
-          {Math.round(zoom * 100)}%
-        </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="text-white hover:bg-melanie-purple/20 mt-1"
-          onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))}
-        >
-          <ZoomOut className="h-4 w-4" />
+          {viewMode === 'topDown' ? (
+            <Eye className="h-5 w-5" />
+          ) : (
+            <EyeOff className="h-5 w-5" />
+          )}
         </Button>
       </div>
+      
+      {/* Zoom Controls UI (only in top-down view) */}
+      {viewMode === 'topDown' && (
+        <div className="absolute bottom-24 right-6 z-30 flex flex-col bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-melanie-purple/30">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-white hover:bg-melanie-purple/20 mb-1"
+            onClick={() => setZoom(prev => Math.min(prev + 0.1, 2))}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <div className="text-xs text-center text-white py-1">
+            {Math.round(zoom * 100)}%
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-white hover:bg-melanie-purple/20 mt-1"
+            onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.5))}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

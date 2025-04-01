@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Music, ZoomIn, ZoomOut } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import MazeScene from './3D/MazeScene';
 import GameControls from './game/GameControls';
 import GameOverlays from './game/GameOverlays';
 import GameDialogs from './game/GameDialogs';
 import MusicUploader from './game/MusicUploader';
+import MusicPlayer from './game/MusicPlayer';
 import PDFViewer from './game/PDFViewer';
 import { useGameState } from '@/hooks/useGameState';
 import { useAudioManager } from '@/hooks/useAudioManager';
@@ -35,7 +36,8 @@ const MelanieGame: React.FC = () => {
     soundEnabled, 
     toggleSound, 
     playSound,
-    changeBackgroundMusic
+    changeBackgroundMusic,
+    currentTrack
   } = useAudioManager();
   
   const { 
@@ -113,16 +115,6 @@ const MelanieGame: React.FC = () => {
               variant="outline" 
               size="icon"
               className="bg-black/70 backdrop-blur-sm border border-melanie-purple/50 shadow-lg hover:bg-melanie-purple/20 hover:border-melanie-purple"
-              onClick={() => setShowMusicUploader(true)}
-              title="Upload Music"
-            >
-              <Music className="h-5 w-5 text-melanie-purple" />
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="icon"
-              className="bg-black/70 backdrop-blur-sm border border-melanie-purple/50 shadow-lg hover:bg-melanie-purple/20 hover:border-melanie-purple"
               onClick={() => setShowPDFUploader(true)}
               title="Upload Victory PDF"
             >
@@ -140,8 +132,16 @@ const MelanieGame: React.FC = () => {
             />
           </div>
           
-          {/* Music Uploader */}
-          <MusicUploader onSelectMusic={changeBackgroundMusic} />
+          {/* Music controls */}
+          <div className="flex space-x-2">
+            <MusicUploader onSelectMusic={changeBackgroundMusic} />
+            <MusicPlayer
+              currentMusic={currentTrack}
+              onSelectMusic={changeBackgroundMusic}
+              soundEnabled={soundEnabled}
+              toggleSound={toggleSound}
+            />
+          </div>
         </div>
       </div>
 
