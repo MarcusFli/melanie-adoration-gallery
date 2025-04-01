@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, Shuffle, Music } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Shuffle, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePlaylist } from '@/context/PlaylistContext';
 
@@ -39,7 +39,21 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       onSelectMusic(audioItems[0].url);
       setCurrentTrackIndex(0);
     }
-  }, [userPlaylist, currentMusic, onSelectMusic]);
+    
+    // Auto-play when new music is added
+    if (audioItems.length > 0 && soundEnabled) {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(err => {
+          console.error("Auto-play failed:", err);
+        });
+      }
+    }
+  }, [userPlaylist, currentMusic, onSelectMusic, soundEnabled]);
+
+  // Update playing state when sound is toggled
+  useEffect(() => {
+    setIsPlaying(soundEnabled);
+  }, [soundEnabled]);
 
   // Handle play/pause
   const togglePlay = () => {
@@ -54,7 +68,9 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        audioRef.current.play().catch(err => {
+          console.error("Play failed:", err);
+        });
       }
     }
   };
@@ -69,7 +85,25 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     
     // Ensure it plays after changing
     if (isPlaying && audioRef.current) {
-      setTimeout(() => audioRef.current?.play(), 100);
+      setTimeout(() => audioRef.current?.play().catch(err => {
+        console.error("Skip next failed:", err);
+      }), 100);
+    }
+  };
+  
+  // Skip to previous track
+  const skipToPrevious = () => {
+    if (playlist.length <= 1) return;
+    
+    const prevIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+    setCurrentTrackIndex(prevIndex);
+    onSelectMusic(playlist[prevIndex].url);
+    
+    // Ensure it plays after changing
+    if (isPlaying && audioRef.current) {
+      setTimeout(() => audioRef.current?.play().catch(err => {
+        console.error("Skip previous failed:", err);
+      }), 100);
     }
   };
 
@@ -83,7 +117,9 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
     
     // Ensure it plays after changing
     if (isPlaying && audioRef.current) {
-      setTimeout(() => audioRef.current?.play(), 100);
+      setTimeout(() => audioRef.current?.play().catch(err => {
+        console.error("Shuffle failed:", err);
+      }), 100);
     }
   };
 
@@ -96,7 +132,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
   };
 
   return (
-    <div className="absolute bottom-6 left-6 z-10">
+    <div className="absolute bottom-6 right-6 z-10">
       <Button 
         variant="outline" 
         size="icon"
@@ -106,11 +142,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
         <Music className="h-5 w-5 text-melanie-purple" />
       </Button>
       
-      {showControls && playlist.length > 0 && (
-        <div className="absolute bottom-full mb-2 left-0 w-64 bg-black/90 backdrop-blur-sm rounded-lg border border-melanie-purple/50 shadow-lg shadow-melanie-purple/20 p-3 text-white">
+      {showControls && (
+        <div className="absolute bottom-full mb-2 right-0 w-64 bg-black/90 backdrop-blur-sm rounded-lg border border-melanie-purple/50 shadow-lg shadow-melanie-purple/20 p-3 text-white">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold truncate max-w-[170px]">{getCurrentTrackName()}</h3>
-            <audio ref={audioRef} src={currentMusic || undefined} autoPlay={soundEnabled} />
+            <audio 
+              ref={audioRef} 
+              src={currentMusic || undefined} 
+              autoPlay={soundEnabled}
+              onEnded={skipToNext}
+            />
           </div>
           
           <div className="flex items-center justify-center space-x-2">
@@ -122,6 +163,16 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
               disabled={playlist.length <= 1}
             >
               <Shuffle className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-melanie-purple hover:bg-melanie-purple/20"
+              onClick={skipToPrevious}
+              disabled={playlist.length <= 1}
+            >
+              <SkipBack className="h-4 w-4" />
             </Button>
             
             <Button 
@@ -147,6 +198,31 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({
               <SkipForward className="h-4 w-4" />
             </Button>
           </div>
+          
+          {playlist.length > 0 && (
+            <div className="mt-3 max-h-32 overflow-y-auto">
+              <p className="text-xs text-gray-400 mb-1">Playlist</p>
+              <ul className="space-y-1">
+                {playlist.map((track, i) => (
+                  <li 
+                    key={track.id}
+                    className={`text-xs p-1.5 rounded flex items-center cursor-pointer 
+                      ${i === currentTrackIndex ? 'bg-melanie-purple/40' : 'hover:bg-melanie-purple/20'}`}
+                    onClick={() => {
+                      setCurrentTrackIndex(i);
+                      onSelectMusic(track.url);
+                      if (isPlaying && audioRef.current) {
+                        setTimeout(() => audioRef.current?.play(), 100);
+                      }
+                    }}
+                  >
+                    <Music className="h-3 w-3 mr-2 text-melanie-purple" />
+                    <span className="truncate">{track.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

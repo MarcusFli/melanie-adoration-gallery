@@ -33,31 +33,34 @@ const CameraController = ({
 }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
+  const lastPositionRef = useRef({ x: playerPosition.x, y: playerPosition.y });
+  const lastDirectionRef = useRef(playerDirection);
   
   useEffect(() => {
     if (controlsRef.current) {
       if (viewMode === 'firstPerson') {
-        // First person view - position camera at player's eye level
+        // First person view - position camera at player's eye level and looking in their direction
         const directionOffset = [
-          [0, 0, -0.5], // North
-          [0.5, 0, 0],  // East
-          [0, 0, 0.5],  // South
-          [-0.5, 0, 0]  // West
+          [0, 0, -1], // North
+          [1, 0, 0],  // East
+          [0, 0, 1],  // South
+          [-1, 0, 0]  // West
         ];
 
         const [offsetX, offsetY, offsetZ] = directionOffset[playerDirection];
         
+        // Position camera at player's position (eye level)
         camera.position.set(
-          playerPosition.x + offsetX,
+          playerPosition.x,
           1.5, // Eye level
-          playerPosition.y + offsetZ
+          playerPosition.y
         );
         
         // Look in the direction the player is facing
         const lookAtPosition = new THREE.Vector3(
-          playerPosition.x + offsetX * 10,
+          playerPosition.x + offsetX,
           1.5,
-          playerPosition.y + offsetZ * 10
+          playerPosition.y + offsetZ
         );
         
         camera.lookAt(lookAtPosition);
@@ -71,6 +74,10 @@ const CameraController = ({
         
         camera.lookAt(playerPosition.x, 0, playerPosition.y);
       }
+      
+      // Update last position and direction
+      lastPositionRef.current = { x: playerPosition.x, y: playerPosition.y };
+      lastDirectionRef.current = playerDirection;
       
       controlsRef.current.update();
     }

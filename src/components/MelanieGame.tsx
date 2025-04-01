@@ -18,7 +18,6 @@ const MelanieGame: React.FC = () => {
   const [showControls, setShowControls] = useState<boolean>(true);
   const [showAchievementDialog, setShowAchievementDialog] = useState<boolean>(false);
   const [showStory, setShowStory] = useState<boolean>(true);
-  const [showMusicUploader, setShowMusicUploader] = useState<boolean>(false);
   const [showPDFUploader, setShowPDFUploader] = useState<boolean>(false);
   const [showVictoryPDF, setShowVictoryPDF] = useState<boolean>(false);
   
@@ -144,47 +143,6 @@ const MelanieGame: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Music uploader dialog */}
-      {showMusicUploader && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-black/90 border border-melanie-purple/50 rounded-lg p-6 w-full max-w-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-white">Upload Game Music</h2>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setShowMusicUploader(false)}
-              >
-                <FileText className="h-5 w-5 text-gray-400" />
-              </Button>
-            </div>
-            
-            <div className="mb-4">
-              <p className="text-gray-300 mb-4">
-                Upload your own music to play while exploring the maze. Supported formats: MP3, WAV.
-              </p>
-            </div>
-            
-            <MusicUploader 
-              onSelectMusic={(url) => {
-                changeBackgroundMusic(url);
-                setShowMusicUploader(false);
-              }} 
-            />
-            
-            <div className="mt-6 flex justify-end">
-              <Button 
-                variant="outline"
-                className="border-melanie-purple/50 text-white hover:bg-melanie-purple/20"
-                onClick={() => setShowMusicUploader(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal dialogs */}
       <GameDialogs 
