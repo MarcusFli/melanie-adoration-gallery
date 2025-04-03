@@ -1,6 +1,6 @@
 
 import React, { useRef, useState, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { ZoomIn, ZoomOut, Eye, EyeOff, User, Map } from 'lucide-react';
 import * as THREE from 'three';
@@ -11,6 +11,7 @@ import MazeCeiling from './MazeCeiling';
 import MelanieCharacter from './MelanieCharacter';
 import CatModel from './CatModel';
 import { Maze } from '@/utils/mazeGenerator';
+import ViewScopeWheel from '../game/ViewScopeWheel';
 
 interface MazeSceneProps {
   maze: Maze;
@@ -31,95 +32,88 @@ const CameraController = ({
   zoom: number;
   viewMode: 'topDown' | 'follow' | 'firstPerson';
 }) => {
-  const { camera } = useThree();
+  const { camera, scene } = useThree();
   const controlsRef = useRef<any>(null);
-  const lastPositionRef = useRef({ x: playerPosition.x, y: playerPosition.y });
-  const lastDirectionRef = useRef(playerDirection);
   
+  // Direction vectors for each cardinal direction (N, E, S, W)
+  const directionVectors = [
+    new THREE.Vector3(0, 0, -1), // North (0)
+    new THREE.Vector3(1, 0, 0),  // East (1)
+    new THREE.Vector3(0, 0, 1),  // South (2)
+    new THREE.Vector3(-1, 0, 0)  // West (3)
+  ];
+  
+  // Set up the camera once on mount
   useEffect(() => {
-    if (controlsRef.current) {
-      // Direction offset vectors for each cardinal direction
-      const directionOffset = [
-        [0, 0, -1], // North
-        [1, 0, 0],  // East
-        [0, 0, 1],  // South
-        [-1, 0, 0]  // West
-      ];
-
-      const [offsetX, offsetY, offsetZ] = directionOffset[playerDirection];
-      
-      if (viewMode === 'firstPerson') {
-        // First person view - position camera at player's eye level and looking in their direction
-        camera.position.set(
-          playerPosition.x,
-          1.5, // Eye level
-          playerPosition.y
-        );
-        
-        // Look in the direction the player is facing
-        const lookAtPosition = new THREE.Vector3(
-          playerPosition.x + offsetX,
-          1.5,
-          playerPosition.y + offsetZ
-        );
-        
-        camera.lookAt(lookAtPosition);
-        
-        if (controlsRef.current) {
-          controlsRef.current.enabled = false;
-        }
-      } 
-      else if (viewMode === 'follow') {
-        // Follow view - position camera behind player
-        const distanceBehind = 1.5;
-        
-        // Calculate position behind player based on direction
-        const cameraX = playerPosition.x - offsetX * distanceBehind;
-        const cameraZ = playerPosition.y - offsetZ * distanceBehind;
-        
-        camera.position.set(
-          cameraX,
-          2.0, // Slightly above player
-          cameraZ
-        );
-        
-        // Look at player's position plus a bit of offset in their facing direction
-        const lookAtPosition = new THREE.Vector3(
-          playerPosition.x + offsetX * 0.5,
-          1.2, // Look at upper body
-          playerPosition.y + offsetZ * 0.5
-        );
-        
-        camera.lookAt(lookAtPosition);
-        
-        if (controlsRef.current) {
-          controlsRef.current.enabled = false;
-        }
-      } 
-      else {
-        // Top-down view
-        camera.position.set(
-          playerPosition.x,
-          5 / zoom, // Height based on zoom
-          playerPosition.y 
-        );
-        
-        camera.lookAt(playerPosition.x, 0, playerPosition.y);
-        
-        if (controlsRef.current) {
-          controlsRef.current.enabled = true;
-        }
-      }
-      
-      // Update last position and direction
-      lastPositionRef.current = { x: playerPosition.x, y: playerPosition.y };
-      lastDirectionRef.current = playerDirection;
-      
+    if (viewMode === 'topDown') {
+      camera.position.y = 5 / zoom;
       if (controlsRef.current) {
-        controlsRef.current.update();
+        controlsRef.current.enabled = true;
       }
     }
-  }, [playerPosition, playerDirection, zoom, camera, viewMode]);
+  }, [viewMode, zoom]);
+  
+  // Update camera position and orientation each frame
+  useFrame(() => {
+    const dirVector = directionVectors[playerDirection];
+    
+    if (viewMode === 'firstPerson') {
+      // Position at player's eye level
+      camera.position.set(
+        playerPosition.x,
+        0.7, // Eye height
+        playerPosition.y
+      );
+      
+      // Look in the direction the player is facing
+      const target = new THREE.Vector3(
+        playerPosition.x + dirVector.x,
+        0.7, // Keep looking straight ahead
+        playerPosition.y + dirVector.z
+      );
+      
+      camera.lookAt(target);
+      
+      if (controlsRef.current) {
+        controlsRef.current.enabled = false;
+      }
+    } 
+    else if (viewMode === 'follow') {
+      // Position camera behind player
+      const distanceBehind = 0.8;
+      
+      // Calculate position behind player based on direction
+      camera.position.set(
+        playerPosition.x - dirVector.x * distanceBehind,
+        0.8, // Slightly above player
+        playerPosition.y - dirVector.z * distanceBehind
+      );
+      
+      // Look slightly above the player's head
+      const target = new THREE.Vector3(
+        playerPosition.x + dirVector.x * 0.5,
+        0.7, // Look at upper body
+        playerPosition.y + dirVector.z * 0.5
+      );
+      
+      camera.lookAt(target);
+      
+      if (controlsRef.current) {
+        controlsRef.current.enabled = false;
+      }
+    } 
+    else if (viewMode === 'topDown') {
+      // Position camera above player
+      camera.position.set(
+        playerPosition.x,
+        5 / zoom, // Height based on zoom
+        playerPosition.y
+      );
+      
+      // Look directly down at player
+      camera.lookAt(new THREE.Vector3(playerPosition.x, 0, playerPosition.y));
+    }
+  });
   
   return (
     <OrbitControls
@@ -129,8 +123,6 @@ const CameraController = ({
       enableRotate={viewMode === 'topDown'}
       maxPolarAngle={viewMode === 'topDown' ? Math.PI / 2 - 0.1 : Math.PI}
       minPolarAngle={viewMode === 'topDown' ? 0.1 : 0}
-      maxDistance={viewMode === 'topDown' ? 10 : 0.1}
-      minDistance={viewMode === 'topDown' ? 2 : 0.1}
     />
   );
 };
@@ -189,10 +181,15 @@ const MazeScene: React.FC<MazeSceneProps> = ({
       case 'firstPerson': return "Primera Persona";
     }
   };
+  
+  // Handle view wheel rotation
+  const handleViewWheelRotate = (direction: 'left' | 'right' | 'up' | 'down') => {
+    // Add custom navigation for view modes if needed
+  };
 
   return (
     <div className="relative w-full h-full">
-      <Canvas>
+      <Canvas shadows>
         <ambientLight intensity={0.4} />
         <directionalLight position={[5, 10, 5]} intensity={0.8} castShadow />
         
@@ -305,6 +302,11 @@ const MazeScene: React.FC<MazeSceneProps> = ({
             <ZoomOut className="h-4 w-4" />
           </Button>
         </div>
+      )}
+      
+      {/* Additional navigation wheel for 3D mode */}
+      {(viewMode === 'follow' || viewMode === 'firstPerson') && (
+        <ViewScopeWheel onRotate={handleViewWheelRotate} />
       )}
     </div>
   );
