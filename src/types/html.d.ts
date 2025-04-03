@@ -1,12 +1,12 @@
 
 // Extend the HTMLInputElement interface to include non-standard attributes
 interface HTMLInputElement {
-  webkitdirectory?: string;
-  directory?: string;
+  webkitdirectory?: string | boolean;
+  directory?: string | boolean;
 }
 
 // Extend InputHTMLAttributes to include our non-standard attributes
-interface InputHTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-  webkitdirectory?: string;
-  directory?: string;
+interface InputHTMLAttributes<T> extends React.AriaAttributes, React.DOMAttributes<T> {
+  webkitdirectory?: string | boolean;
+  directory?: string | boolean;
 }

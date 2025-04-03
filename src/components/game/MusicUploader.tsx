@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Music, Upload, X, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -133,8 +132,8 @@ const MusicUploader: React.FC<{ onSelectMusic: (url: string) => void }> = ({ onS
                 className="hidden" 
                 onChange={handleFileChange}
                 multiple
-                webkitdirectory=""
-                directory=""
+                webkitdirectory={true}
+                directory={true}
               />
               <FolderOpen className="h-4 w-4 mr-2 text-melanie-purple" />
               <span className="text-xs">Folder</span>
