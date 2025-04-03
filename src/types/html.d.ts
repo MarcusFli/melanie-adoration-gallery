@@ -5,8 +5,10 @@ interface HTMLInputElement {
   directory?: string | boolean;
 }
 
-// Extend InputHTMLAttributes to include our non-standard attributes
-interface InputHTMLAttributes<T> extends React.AriaAttributes, React.DOMAttributes<T> {
-  webkitdirectory?: string | boolean;
-  directory?: string | boolean;
+// Extend React's InputHTMLAttributes to include our non-standard attributes
+declare namespace React {
+  interface InputHTMLAttributes<T> extends React.HTMLAttributes<T> {
+    webkitdirectory?: string | boolean;
+    directory?: string | boolean;
+  }
 }
